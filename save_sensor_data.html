@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="generator" content="AsciiDoc 8.6.3">
+<title></title>
+</head>
+<body>
+<hr>
+<h2><a name="save_sensor_data"></a>Save sensor data using Google Spreadsheets</h2>
+<p>The "Hello Arduino" section in Chapter 11 of <a href="http://www.makershed.com/ProductDetails.asp?ProductCode=9781449379803">Getting Started with Processing</a> shows how to read data into Processing from Arduino. In a nutshell, the Arduino code (example 11-6 in the book) reads data from a light sensor and writes it out to the serial port. The section then goes on to describe a number of increasingly sophisticated sketches that retrieve and visualize the sensor data using Processing&#8217;s <a href="http://www.processing.org/reference/libraries/serial/index.html"">Serial</a> library.</p>
+<p>This Codebox shows you how to save this sensor data to a Google Spreadsheet. The cool thing is that you can then use any of the goodies that Google provides (charts, gadgets, maps, etc) directly with your data. While the light sensor is pretty basic, you can use this basic setup to record data from more sophisticated sensors, such as a Parallax GPS receiver module into Google Spreadsheets, and then create a map of where you&#8217;ve been that you could post as a gadget.</p>
+<div>
+<a name="FIG1"></a>
+<img src="figs/ano_sensor_spreadshee_120910.png" style="border-width: 0;" alt="figs/ano_sensor_spreadshee_120910.png">
+<p><b>Figure 1. </b>Reading sensor data from an arduino and writing it to a Google Spreadsheet</p>
+</div>
+<p>The sketch relies on the <a href="http://code.google.com/p/gdata-java-client/">Google API Client Library for Java</a>, which is a set of code libraries for interacting with various Google&#8217;s services (not just Spreadsheets). In researching this article, I found Processing guru <a href="http://blog.blprnt.com/about">Jer Thorpe&#8217;s</a> article <a href="http://blog.blprnt.com/blog/blprnt/open-science-h1n1-processing-and-the-google-spreadsheet-api">Open Science, H1N1, Processing, and the Google Spreadsheet API</a> a great inspiration. While it&#8217;s based on an older version of the API (version 1.0, while the APIs are now up to version 3.0), it&#8217;s a great introduction to interacting with Google. Thanks, Jer!</p>
+<h3><a name="_create_your_spreadsheet"></a>Create your spreadsheet</h3>
+<p>The first step in the project is to set up a Google Spreadsheet.  To do this, you&#8217;ll need a Google account (obviously!).  Sign in, and then go into documents to create a new spreadsheet named "sensor log." Then, add the following columns in first row: "date," "time," and "reading." As we&#8217;ll see shortly, these column headers are used in your code to interact with the data in the spreadsheet. Then save the spreadsheet. (Leave it open, though.)</p>
+<h3><a name="_set_up_the_sketch"></a>Set up the sketch</h3>
+<p>Next, a bit of housekeeping. The Google data client libraries use <a href="http://onjava.com/pub/a/onjava/excerpt/javaian5_chap04/index.html">generics</a> and other goodies introduced in Java 1.5, so you may need to update your version of Processing to release 0136 or higher. If you&#8217;re not sure which version you have,  <a href="http://processing.org/download/">download the latest version of Processing</a> to make sure. Otherwise, you&#8217;re in for a lot of head scratching. Once you&#8217;ve confirmed you&#8217;re at release 0136+, download the Java client library <a href="http://code.google.com/p/gdata-java-client/downloads/detail?name=gdata-samples.java-1.40.0.zip&amp;can=1&amp;q=">gdata-samples.java-1.40.0.zip</a></p>
+<table border="0" bgcolor="#e8e8e8" width="100%" cellpadding="10"><tr><td>
+<pre>This is a slightly older version of the libraries -- there are some problems with the most recent version hanging on a Mac, so people recommended downgrading until Google fixes the problem.]   You will also need &lt;a href="http://code.google.com/p/guava-libraries/downloads/detail?name=guava-r07.zip"&gt;Guava&lt;/a&gt;, the Google Collection library.</pre>
+</td></tr></table>
+<p>Once you&#8217;ve downloaded and unzipped the files, fire up Processing and paste the following code into the sketch area:</p>
+<table border="0" bgcolor="#e8e8e8" width="100%" cellpadding="10"><tr><td>
+<pre>import com.google.gdata.client.spreadsheet.*;
+import com.google.gdata.data.*;
+import com.google.gdata.data.spreadsheet.*;
+import com.google.gdata.util.*;
+
+import processing.serial.*;
+
+// Variables structures for google spreadsheet API
+SpreadsheetService service;  //Holds link to all your spreadsheets
+WorksheetEntry worksheet;  //Holds link to the sensor log spreadsheet
+String uname = "[enter your google account here]";  //Your google account user name
+String pwd = "[enter your google account password here]";  //Your google account password
+String spreadsheet_name = "sensor log";  //Name of the spreadsheet you want to write data to.  Must match exactly, including case.
+int spreadsheet_idx = 0; //Index for the "sensor log spreadsheet
+
+
+//Variables for writing sensor data
+Serial port;  // Create object from Serial class
+int oldTime;  //timer variable
+int reportingInterval = 2000;  //Number of miliiseconds between when sensor data is recorded
+
+// Sends the data to the spreadsheet
+void transmitData(float val) {
+  String date = day() + "/" + month() + "/" + year();  //Build the current date
+  String time = hour() + ":" + minute() + ":" + second(); //Build the current time
+  try {
+     //Create a new row with the name value pairs
+     ListEntry newEntry = new ListEntry();
+     newEntry.getCustomElements().setValueLocal("date", date);
+     newEntry.getCustomElements().setValueLocal("time", time);
+     newEntry.getCustomElements().setValueLocal("reading", Float.toString(val));
+     //Write it out to the google doc
+     URL listFeedUrl = worksheet.getListFeedUrl();
+     ListEntry insertedRow = service.insert(listFeedUrl, newEntry);
+  } catch (Exception e) {
+     println(e.getStackTrace());
+  }
+}
+
+
+void setup() {
+  //Set up the serial port to read data
+  //This code comes from example 11-8 of Getting Started with Processing
+  String arduinoPort = Serial.list()[0];
+  port = new Serial(this, arduinoPort, 9600);
+  oldTime = millis();
+  //Set up the google spreadsheet
+  service = new SpreadsheetService("test");
+  try {
+     service.setUserCredentials(uname,  pwd);
+     // Search for the spreadsheet named we're looking for
+     // Note that according to the documentation you should be able to include the key in the URL, but I
+     // was unable to get this to work.  It looked like there was a bug report in.
+     // As a work around, this code pulls a list of all the Spreadheets in your acocunt and searches for the
+     // one with the matching name.  When it finds it, it breaks out of the loop and the index is set
+     URL feedURL = new URL("http://spreadsheets.google.com/feeds/spreadsheets/private/full/");
+     SpreadsheetFeed feed = service.getFeed(feedURL, SpreadsheetFeed.class);
+     for (SpreadsheetEntry entry: feed.getEntries()) {
+       if (entry.getTitle().getPlainText().equals(spreadsheet_name) ) {
+         break;
+       }
+       spreadsheet_idx += 1;
+     }
+     //Fetch the correct spreadsheet
+     SpreadsheetEntry se = feed.getEntries().get(spreadsheet_idx); //Fetch the spreadsheet we want
+     worksheet = se.getWorksheets().get(0);  //Fetch the first worksheet from that spreadsheet
+     println("Found worksheet " + se.getTitle().getPlainText());
+
+  } catch (Exception e) {
+    println(e.toString());
+  }
+}
+
+//Reads the port every few seconds and sends the data back to Google
+void draw() {
+  float val = 0.0;
+  if (port.available() &gt; 0) { // If data is available,
+    val = port.read();        // read it and store it in val
+  }
+  //Determine if we need to report the level
+  if ((millis() - oldTime) &gt; reportingInterval) {
+    oldTime = millis();
+    transmitData(val);
+  }
+}</pre>
+</td></tr></table>
+<p>Next, add the following four files to your project from the libraries you downloaded earlier (use the Sketch &#8594; Add files menu item):
+* <em>gdata download directory</em>/java/java/lib/gdata-client-1.0.jar&lt;/i&gt;
+* <em>gdata download directory</em>/java/java/lib/gdata-core-1.0.jar&lt;/i&gt;
+* <em>gdata download directory</em>/java/java/lib/gdata-spreadsheet-3.0.jar&lt;/i&gt;
+* <em>guava download directory</em>/guava-r07.jar&lt;/i&gt;</p>
+<p>Finally, you&#8217;ll need to update a few variables in the sketch to set your username, password; you&#8217;ll also need to make sure that you enter the <strong>exact</strong> name of the spreadsheet you created at the start of he project. Here are the lines you need to modify:</p>
+<table border="0" bgcolor="#e8e8e8" width="100%" cellpadding="10"><tr><td>
+<pre>String uname = "[enter your google account here]";  //Your google account user name
+String pwd = "[enter your google account password here]";  //Your google account password
+String spreadsheet_name = "sensor log";  //Name of the spreadsheet you want to write data to.  Must match exactly, including case.</pre>
+</td></tr></table>
+<p>Once you&#8217;re done, fire up the sketch. Assuming you&#8217;re running the Arduino code from Example 11-6 of <em>Getting Started with Processing</em>, you should start to see your spreadsheet filling up with sensor data every 2 seconds.</p>
+<h3><a name="_discussion"></a>Discussion</h3>
+<p>I&#8217;ll be honest: the hardest part of this project is getting all the libraries set up correctly.  Once you do, there&#8217;s really not that much to the code itself.  The <a href="http://code.google.com/apis/spreadsheets/data/2.0/developers_guide_java.html">Developer&#8217;s Guide: Java</a> documentation does a good job describing most of what you need to know.</p>
+<a name="NOTE"></a>
+<table border="0" bgcolor="#e8e8e8" width="100%" cellpadding="10"><tr><td>
+<pre>Note that this is an older version of the documentation. I found it much more clearer than the most recent version, which you can find at http://code.google.com/apis/spreadsheets/data/3.0/developers_guide.html[Developer's Guide (v3.0)].</pre>
+</td></tr></table>
+<p>As you&#8217;ll see in the <em>setup()</em> method, the sketch begins by authenticating your credentials.  Assuming you check out, it then pulls a list of all your spreadsheets and finds the one that has the same title as that defined in the <em>spreadsheet_name</em> variable.  Finally, it pulls out the first worksheet (these are the various tabs in the spreadsheet) and saves it for future use. From there, the sketch drops into the <em>draw()</em> method, which uses a timer to periodically call the <em>transmit()</em> function.</p>
+<p><em>transmit()</em> is where most of the work happens. It starts by creating a couple of strings that hold the current date and the time, and then creates a new <em>ListEntry</em>, which is the primary data class used to interact with worksheets. The class method <em>getCustomElements().setValueLocal()</em> is used to map the Processing variables to the column names in the worksheet, as shown the next figure:</p>
+<div>
+<a name="FIG2"></a>
+<img src="figs/ano_spreadsheet_col_header_map_121010.png" style="border-width: 0;" alt="figs/ano_spreadsheet_col_header_map_121010.png">
+<p><b>Figure 2. </b>Column headers map to vairables in Processing</p>
+</div>
+<p>Once you get this sketch working, the possibilities are endless. Well, OK, they&#8217;re not endless. They&#8217;re finite. But, there are a lot of possibilities, nevertheless.  Enjoy!</p>
+<p></p>
+<p></p>
+<hr><p><small>
+Last updated 2011-03-10 16:58:11 EST
+</small></p>
+</body>
+</html>
