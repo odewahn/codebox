@@ -1,0 +1,58 @@
+Recursion is an important programming technique that lends itself to a variety of areas, not least of which is creating interesting visual images. In brief, recursion is a technique for breaking a complex problem into smaller and simpler versions of itself (this is called the "recursive step") until the problem is trivial to solve (this trivial case is called the "base case"). 
+
+Many artists have used recursive themes in their work, particularly [url="http://en.wikipedia.org/wiki/M._C._Escher"]M.C. Escher[/url] and [url="http://en.wikipedia.org/wiki/Ren%C3%A9_Magritte"]Rene Magritte[/url]. This answer shows a quick way you can use [url="http://answers.oreilly.com/topic/1202-how-to-get-started-with-processing/page__hl__processing__fromsearch__1"]Processing[/url] and recursion to create images in the style of another famous artist -- [url="http://en.wikipedia.org/wiki/Piet_Mondrian"]Piet Mondarian[/url], who is best known for his compositions of colorful rectangles. 
+
+The following program uses recursion to creates a faux-Mondarian. The base case is simple: all you do is draw a filled rectangle with a thick black border; the rectangle's color is selected from a small set of primary colors (red, white, yellow, etc). The recursive step is to break this rectangle (and all subsequent rectangles) into 4 smaller rectangles by selecting a random point in its interior.
+
+Here's the sketch:
+
+[code]
+
+// Draw a Mondarian-inspired image using recursion
+void piet(int x0, int y0, int x1, int y1, int N) {
+ if (N == 0) {
+ // Base case -- draw a colorful rectangle with a thick black border 
+ int sw = 3; //this is the stroke width for the rectangle's border
+ color c[] = { #ff0000, #00ff00, #0000ff, #ffff00, #ffffff}; //Mondarian color palatte
+ fill(c[int(random(c.length))]);
+ strokeWeight(sw);
+ rect (x0,y0,x1-x0-sw,y1-y0-sw);
+ } else {
+ //Recursive step -- recursively break the current rectangle into 4 new random rectangles
+ int i = int(random(x0,x1)); //Pick a random x coordinate inside the current rectangle
+ int j = int(random(y0,y1)); //Pick a random y coordinate inside the current rectangle
+ piet(x0,y0,i,j,N-1); // Recurse on upper left rectangle
+ piet(i,y0,x1,j,N-1); // Recurse on upper right rectangle
+ piet(x0,j,i,y1,N-1); // Recurse on lower left rectangle
+ piet(i,j,x1,y1,N-1); // Recurse on lower right rectangle
+ }
+}
+
+// keep draw() here to continue looping while waiting for keys
+void draw() {
+}
+
+//Draw a new image each time a key is pressed
+void keyPressed() { 
+ piet(1,1,400,400,2 );
+}
+
+//Draw the first image
+void setup() {
+ size(400,400);
+ piet(1,1,400,400, 2);
+}
+[/code]
+
+You'll get a new image each time you press a key. Here are a few examples for varying values of the parameter N, which controls how many times the program divides the initial rectangle.
+
+N = 1 gives you 4 interior rectangles:
+[attachment=738:ano_mond_1.png]
+
+N = 2 gives 16 interior rectangles:
+[attachment=737:ano_mond_2.png]
+
+N=3 gives 64 interior rectangles:
+[attachment=739:ano_mond_3.png]
+
+[bookisbn]9781449379803[/bookisbn]

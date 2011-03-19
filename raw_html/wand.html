@@ -1,0 +1,134 @@
+<p>Color tracking is a simple but powerful technique for creating fun new ways to interact with software. Using a webcam as a sensor, a program is "trained" to locate a specific color on some sort of physical pointer. The colored pointer is mapped to an (x,y) coordinate as it's moved around. Done in real time, this allows you to use the pointer like a mouse, opening up lots of interesting possibilities. This codebox shows you how to use Processing and your computer's webcam (for this example, I used my MacBook's built-in iSight camera) to create a virtual "magic wand" that can change colors on cue, like this:</p>
+<p><iframe src="http://player.vimeo.com/video/14270345" width="600" height="450" frameborder="0"></iframe></p>
+<p>While the example itself is simple, the code is a building block for a variety of projects I'll explore later in this series.</p>
+<p><strong>Set up Processing</strong></p>
+<p>Before jumping into the project, let's take just a few minutes and review a bit about Processing. First, if you're completely new to the programming, you should spend some time <a href="http://processing.org/learning/" title="Learning the language">learning the language</a> at <a href="http://processing.org/" title="Processing.org">Processing.org</a> or by grabbing a copy of <a href="http://oreilly.com/catalog/0636920000570" title="Getting Started with Processing">Getting Started with Processing</a>, which was written by Ben Fry and Casey Reas, the co-creators of the Processing language. While I'll point out supporting material and references along the way, you're likely to be very frustrated unless you have some basic grounding in the system. So, if you haven't done it already, <a href="http://processing.org/download/">download</a> Processing for your platform and install it.</p>
+<p><strong>Make a "wand"</strong></p>
+<p>Once Processing is set up and the sketch is running, you'll need to make a "wand." (I put wand in quotes because you can really use any object with a distinctive color.) <a href="http://www.instructables.com">Instructables</a> has a lot of really cool examples for this, like "<a href="http://www.instructables.com/id/Make-an-awesome-Harry-Potter-wand-from-a-sheet-of-/">Make an awesome Harry Potter wand from a sheet of paper and glue gun glue</a>". The key element, at least from Processing's point of view, is that the wand has a distinctive color at the tip. As a quick and dirty solution, I wrapped a day-glo orange post-it note around the end of a chopstick. Not exactly Harry Potter, but it worked enough to get the job done.</p>
+<p><br />
+<img src="http://blog.makezine.com/ano_wand_101810.png" width="600" height="240" alt="ano_wand_101810.png" /><br /></p>
+<p><strong>Start the sketch</strong></p>
+<p>Once your wand is ready, you can give the sketch a try. Start Processing and then paste the following code into the main window. You can either highlight the first line, scroll all the way down and then use ctrl-c (hard), or you can click on this link (<a href="http://makezine.googlecode.com/svn/trunk/processing/wands/basic/magic_wand.pde">magic_wand.pde</a>), press ctrl+a to select all the text, and then use ctrl+c to copy it (easier).</p>
+<p><object data="http://makezine.googlecode.com/svn/trunk/processing/wands/basic/magic_wand.pde" type="text/plain" width="600" style="height: 600; background-color: #cccccc">
+  </object></p>
+<p>Once you've pasted in the code, press the start button at the upper left hand corner of the Processing window, like this:</p>
+<p><img src="http://blog.makezine.com/ano_processing_ide_090110.png" width="600" height="478" alt="ano_processing_ide_090110.png" /></p>
+<p>Finally, step in front of your webcam. You're now ready to play with color tracking.</p>
+<p><strong>Acquire the tracking color</strong></p>
+<p>The first step is to set the color that Processing will track. To do this, move the tip of the wand into the white box at the top left hand corner. You'll see the box above turn a color that looks mostly like the tip of your wand. (More on this in a second). Once the color is set, press any key.</p>
+<p><img src="http://blog.makezine.com/ano_acquire_zoom_101810.png" width="600" height="262" alt="ano_acquire_zoom_101810.png" /></p>
+<p>Behind the scenes, Processing is reading each frame coming in from the webcam and, using a wonderful little hack by Processing guru <a href="http://">Daniel Shiffman,</a> flipping the image horizontally to create a more natural interaction with the sketch. Otherwise, all your movements appear mirrored image, so that moving the wand to the right appears as moving it to the left, and vice versa. This all happens in the following code snippet:</p>
+<pre>
+<code>
+   if (cam.available()) {
+      cam.read();     
+      // This is a nify little trick from Processing guru Daniel Shiffman to 
+      // revese the mirror image effect on your motions in the webcam
+      pushMatrix();
+      scale(-1.0, 1.0);
+      image(cam,-cam.width,0);
+      popMatrix();
+      image(cam,0,0);
+   }</code>
+</pre>After the image is read into <code>cam</code> variable, it's passed to the <code>searchForTargetColor()</code> function (functions are described in Chapter 8 of Getting Started with Processing). This function scans the pixels inside the white target acquisition box and averages their red, green, and blue components to to come up with an overall color that represents the target color. This happens here:<br />
+<pre>
+<code>
+color acquireTargetColor() {
+   int r = 0;
+   int g = 0;
+   int b = 0;
+   int cnt = 0;
+   for (int i = 0; i &lt; targetSide; i++) {
+      for (int j=0; j &lt; targetSide; j++) {
+        cnt += 1;
+        int x = targetX + i;  //x point inside the target box
+        int y = targetY + j;  //y point inside the target box
+        // Pull out the current pixel color
+        color c = cam.pixels[y*width + x];
+        r += red(c);
+        g += green(c);
+        b += blue(c);
+      }
+   }
+   targetColor = color(r/cnt, g/cnt, b/cnt);
+   return targetColor;
+}
+</code>
+</pre><strong>Search for the target color</strong>
+<p>Once you press a key to set the target's color (which is now stored in the <code>targetColor</code> variable), the Sketch switches modes from acquiring the target color to searching for the target color. This job is done by the <code>searchForTargetColor()</code> function, which scans every pixel in the image and compares it to the <code>targetColor</code>. If the distance between the 2 colors is less than 50 units (or whatever value you set in <code>colorDist</code>), then it's considered a a match. (A quick note on distance: this means that you treat the RGB colors as a "space" that has a red axis, green axis, and a blue axis; the distance between two colors is just the euclidean distance between two points from basic Algebra.) If the pixel matched the target color, it's added to a running total of matching pixels. Once every pixel has been tested, we then find the average of all the matching colors to come up with an overall position for the tip of the wand. All this happens here:</p>
+<pre>
+<code>
+void searchForTargetColor() {
+  // Reset wand
+  wandX = 0;
+  wandY = 0;
+  wandFound = false;
+  //Now search for pixels that match the target color
+  int numPoints = 0;  //Number of points found
+  int sx = 0;  //Sum of all x coordinates found
+  int sy = 0;  //Sum of all the y coordinates found
+  for (int i=0; i &lt; width; i++) {
+    for (int j=0; j &lt; height; j++) {
+      color pix = cam.pixels[j*width + i]; //Grab pixel at i,j
+      float dr = red(targetColor) - red(pix);
+      float dg = green(targetColor) - green(pix);
+      float db = blue(targetColor) - blue(pix);
+      float d = sqrt ( pow(dr,2) + pow(dg,2) + pow(db,2));
+      // If it's a match, then keep a running total
+      if (d &lt; colorDist) {
+         numPoints += 1;
+         sx += i;
+         sy += j;
+      }
+    }
+  }
+  // If we found the target color, set the wand coordinates
+  if (numPoints &gt; 0) {
+    wandX = sx / numPoints;
+    wandY = sy / numPoints;
+    wandFound = true;
+  }
+}</code>
+</pre>This average position concept is why it's so important to use a distinct color on the tip. If you were to pick a common color, like white, then your average position might include not just the wand, but the door frame, your shirt, a pair of shoes, or whatever other random white object happened to be in the field of view.
+
+<p>Once the target's location has been computed, the sketch then create a series of rays that emanate from the tip of the wand. This is handled in the <code>drawWand()</code> function, which uses a timer to control how quickly the rays emerge. (Timers are covered in Example 7-11 of the Getting Started book). Here's the snippet for this:</p>
+<pre>
+<code>void drawWand(int N, int R) {
+   strokeWeight(6);
+   stroke(wandColor);
+   smooth();
+   int elapsedTime = millis() - oldTime;
+   float r = map(elapsedTime, 0, wandFrequency, 0, R);
+   for (int i=0; i &lt; N; i++) {
+      float step = radians(360.0 / N);
+      float dx = r * sin(i*step) + wandX;
+      float dy = r * cos(i*step) + wandY;
+      line(wandX + 10*sin(i*step),wandY+10*cos(i*step),dx,dy);
+   }
+   if (elapsedTime &gt; wandFrequency) {
+     oldTime = millis();
+   }
+}
+</code>
+</pre>
+<p><img src="http://blog.makezine.com/ano_track_color_101710.png" width="600" height="470" alt="ano_track_color_101710.png" /></p><strong>Perform an action</strong> The last step is to use the wand control the sketch's behavior. In this example, I've added a small circle at the top left corner of the screen that changes colors based on a timer you can set. If you move the tip of the wand into the circle, then the wand's ray's will switch to the new color. which is just a slight modification of Example 5-16 from the Getting Started book:
+<pre>
+<code>
+//Sets the color circle to some new random color
+void setColorCircleColor() {
+  int elapsedTime = millis() - colorCircleMillis;
+  if (elapsedTime &gt; colorCircleFrequency) {
+      colorCircleMillis = millis();
+      colorCircleColor = color(int(random(255)), int(random(255)), int(random(255)));  //Random color
+
+  } 
+}
+  
+void testControlBounds() {
+  float d = dist(wandX,wandY,cX, cY);
+  if (d &lt; cR) {
+    wandColor = colorCircleColor;
+  }
+}
+</code>
+</pre>

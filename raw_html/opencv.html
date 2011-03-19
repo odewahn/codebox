@@ -1,0 +1,106 @@
+<div style="align: right;"><a href="http://mt.makezine.com/cgi-bin/mt/mt-search.cgi?blog_id=1&Template=tag_display&tag=@codebox"><img src="http://blog.makezine.com/upload/2010/09/MZ_Codebox.gif" width="600" height="70" alt="MZ_Codebox.gif"/></a></div>
+<p>
+
+<a href="http://opencv.willowgarage.com/wiki/">OpenCV</a> is a "library of programming functions for real time computer vision."  An open source project supported by <a href="http://www.willowgarage.com/pages/software/opencv">Willow Garage</a>, the library contains over 500 algorithms for image manipulation, object detection, feature extraction, and a variety of other tools you can use to write programs that can "see."  
+<p>
+The <a href="http://ubaa.net/shared/processing/opencv/">OPENCV Processing and Java Library</a>, a project maintained by <a href="http://ubaa.net">Stéphane Cousot</a> and <a href="http://abstractmachine.net/biography/">Douglas Edric Stanley</a> at the <a href="http://www.ecole-art-aix.fr/">École Supérieure d'Art d'Aix-en-Provence</a>, provides a wrapper that allows you to use a subset of OpenCV in Processing.  In honor of Halloween, this Codebox will show you how use OpenCV to remove people's heads in real time from a video feed. For example:
+<p>
+<iframe src="http://player.vimeo.com/video/15851771" width="600" height="450" frameborder="0"></iframe>
+<p>
+Future posts will cover less gruesome applications for this awesome library.
+<p>
+<strong>Installing OpenCV Processing and Java Library</strong>
+<p>
+The fist step in using the library is to download and install it from <a href="http://ubaa.net/shared/processing/opencv/">http://ubaa.net/shared/processing/opencv/</a>.  The site's documentation is great -- just follow the steps listed on the "Installation Instructions" on the main page.  Once you've followed the steps, fire up Processing, and then try out the code in the <a href="http://ubaa.net/shared/processing/opencv/opencv_detect.html">detect()</a> example, which puts a red rectangle around any faces  (frontal view) detected in the webcam.  You should see something like this:
+<p>
+<img src="file://localhost/Users/odewahn/Library/Application%20Support/ecto3/cache/0E3527F8-D162-402E-B33C-FF3677AB4EA3.png" width="600" height="456" alt="ano_headless_detect_101410.png" />
+<p>
+Note for Windows users: you may have to install<a href="http://www.apple.com/quicktime/download/">Quicktime</a> and <a href="http://www.eden.net.nz/7/20071008/">WinVDIG</a> to use the webcam in Processing.
+<p>
+
+<strong>Setting up the Sketch</strong>
+<p>
+Once you've got the basic <i>detect()</i> example working, you can use the following sketch.  As with other posts in this series, you can either highlight all the text in the box below and press ctrl+c, or go directly to the Makezine code repository and copy <a href="http://code.google.com/p/makezine/source/browse/trunk/processing/headless_cam/headless_cam.pde">headless_cam.pde</a>.
+<p>
+<object data="http://makezine.googlecode.com/svn-history/r30/trunk/processing/google_spreadsheet_writer/google_spreadsheet_writer.pde" type="text/plain" width="600" style="height: 600px; background-color: #cccccc"></object>
+<p>
+When you start the program, you should see a message to "step out of the scene and press any key."  Once the coast is clear, press any key and walk back into the image.  You (and anyone else) should, thanks to OpenCV, be headless.   As you move around you'll notice that your head will wink in and out -- this happens when something interferes with OpenCV's detection algorithm.  For example, if you put your hand in front of your face, this will "break" the OpenCV detection algorithm.  
+<p>
+<strong>Discussion</strong>
+<p>
+So, how does this thing work?  It's pretty simple, actually -- all the sketch does is search for faces using OpenCV's <i>detect()</i> method and then replace the detected faces with the same (but slightly bigger) pixels from the background image saved at the start of the sketch.  This makes the face "disappear," mostly. Slight differences in lighting create small changes between the new and old images, making the replaced face appear a bit boxy.  In theory, you should be able to smooth some of these out with other OpenCV functions, but that's for future projects.
+<p>
+The first step in the sketch is to save a picture of the empty background scene.  This is done by the <i>copy()</i> command in the <i>keyPressed()</i> method:
+<p>
+<pre>
+<code>
+ bg.copy(cam,0,0,width,height,0,0,width,height);
+</code>
+</pre>
+The command requires two images: a <i>destination</i> image, which is where the pixels will be copied <i>to</i>, and a <i>source</i> image, which is where the pixels will be copied <i>from</i>.  To use it, you call the <i>copy()</i> method on the destination image (in this case, the variable <i>bg</i>) and supply the nine (!) required arguments, which are:
+<ul>
+<li>The <i>source</i> image from which we want to make a copy.  In this case we're using the variable <i>cam</i>, which contains the current frame from the webcam.</li>
+<li>The area in the source image that is to be copied.  This area is described by the next 4 arguments: the x and y coordinates of the upper left-hand corner of the region, and the region's width and height.</li>
+<li>The area in the destination image where the copied pixels will go. These are similar to the prior 4 arguments, and consist of the x and y coordinates, along with the area's width and height.  If the dimensions are different between the source and destination areas, Processing will scale the image automatically.</li>
+</ul>
+<p>
+After this command completes, you'll have a copy of the background scene saved in the variable <i>bg</i>.  The next step is to use OpenCV to search for faces.  As described earlier, this is done using the <i><a href="http://ubaa.net/shared/processing/opencv/opencv_detect.html">detect()</a></i> method, which returns an array of Rectangles.  A Rectangle is a class that is included in Java, the base language from which Processing is derived.  (One of the cool things about Processing is that it can use any command that you can use in Java, making it a very powerful language indeed.)  A Rectangle has a four key fields that concern us: the x and y coordinate of its upper left hand corner, and a width and height.  (Sound familiar?)
+<p>
+If all we wanted to do is replace just the face, we can simply use the <i>copy()</i> command to copy over the equivalent regions.  (Note: the <i>loadPixels()</i> and <i>updatePixels()</i> method are required whenever we want to access or update the pixels in an image.) Here's the code:
+<p>
+<pre>
+<code>
+     fg.copy(cam,0,0,width,height,0,0,width,height);  //Copy the camera image into  fg
+     opencv.copy(cam);  //Copy the image into openCV's buffer   
+     Rectangle[] faces = opencv.detect();  // detect anything ressembling a FRONTALFACe
+     for( int i=0; i<faces.length; i++ ) {
+         fg.loadPixels();
+         fg.copy(bg, faces[i].x, faces[i].y, faces[i].width, faces[i].height, faces[i].x, faces[i].y, faces[i].width, faces[i].height);
+         fg.updatePixels();  
+      }
+</code>
+</pre>
+<p>
+Here's the output:
+<p>
+<img src="http://blog.makezine.com/ano_face_only_101510.png" width="600" height="483" alt="ano_face_only_101510.png" />
+<p>
+As you can see, removing only the face is not quite the right because a lot of the head remains visible.  So, we'll also need a way to increase the size of the box.  This is the job <i>enlargeFaceBox()</i>, which uses a bit of trigonometry enlarge the box by a given percentage and translate it along its diagonal.  The following diagram shows what's happening:
+<p>
+
+<img src="http://blog.makezine.com/ano_enlarge_face2_101910.png" width="600" height="487" alt="ano_enlarge_face2_101910.png" />
+
+<p>
+The trig comes into play when calculating the correct displacements that will slide the rectangle up the diagonal.  The key function is <i><a href="http://processing.org/reference/atan2_.html">atan2()</a></i>, which calculates the angle between two points relative to the x-axis.  ( This angle is often called <i>theta</i> by hoary old mathematicians).  Once you have <i>theta</i>, you can use the <i>cos()</i> and <i>sin()</i> functions to compute the x and y displacements <i>dx</i> and <i>dy</i>.  Here's the code:
+<pre>
+<code>
+Rectangle enlargeFaceBox (float incPct, int x, int y, int w,int h) {
+    float r = dist(0,0,w,h) / 2;  //Computes radius of the center diagonal
+    float theta = atan2(h,w);  //Computes the angle of the diagonal
+    float dx = r*incPct*cos(theta); //Finds 
+    float dy = r*incPct*sin(theta);
+    return new Rectangle( (int) (x - dx), (int) (y - dy), (int) (w + 2*dx), (int) (h + 2*dy));
+}
+</code>
+</pre>
+<p>
+Finally, since we're enlarging the box, we need to make sure that it remains within the visible areas of the screen, just like we did in the <a href="http://blog.makezine.com/archive/2010/09/codebox_swat_an_arraylist_of_target.html">Swat an (arraylist) of targets</a> project, which is all done here:
+<pre>
+<code>
+    faceBox = enlargeFaceBox(0.75, faces[i].x, faces[i].y, faces[i].width, faces[i].height);
+    if (faceBox.x < 0) {faceBox.x = 0; }
+    if (faceBox.x + faceBox.width > width) { faceBox.width = width - faceBox.x; }
+    if (faceBox.y < 0) { faceBox.y = 0; }
+    if (faceBox.y + faceBox.height >  height) { faceBox.height = height - faceBox.y; }
+    ...
+</code>
+</pre>
+<p>
+And, that's it.  Hope you can find a creepy use for this on Halloween.
+<p>
+ps -- You can learn the full details of how to work with images from Daniel Shiffman's excellent <a href="http://processing.org/learning/pixels/">Images and Pixels</a> tutorial on the Processing.org site.  (The chapter is an excerpt of his wonderful book, <a href="http://www.amazon.com/Learning-Processing-Beginners-Programming-Interaction/dp/0123736021">Learning Processing: A Beginner's Guide to Programming Images, Animation, and Interaction</a>, which I highly recommend you pick up if you want to really master Processing.)
+<p>
+<p><strong>In the Maker Shed:</strong></p>
+<a href="http://www.makershed.com"><img src="http://blog.craftzine.com/makershedsmall.jpg" height="45" width="200" alt="Makershedsmall" /></a></br>
+<div style="align: right;"><img src="http://blog.makezine.com/upload/2010/09/our_latest_make_book--getting_start/processingCover.jpg"  width="193" height="300" alt="processingCover.jpg"/></div><a href="http://www.makershed.com/ProductDetails.asp?ProductCode=9781449379803">Getting Started with Processing</a>
+Learn computer programming the easy way with Processing, a simple language that lets you use code to create drawings, animation, and interactive graphics. Programming courses usually start with theory,but this book lets you jump right into creative and fun projects.  It's ideal for anyone who wants to learn basic programming, and  serves as a simple introduction to graphics for people with some programming skills. </p>

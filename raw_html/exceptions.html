@@ -1,0 +1,124 @@
+<div style="align: right;"><a href="http://mt.makezine.com/cgi-bin/mt/mt-search.cgi?blog_id=1&Template=tag_display&tag=@codebox"><img src="http://blog.makezine.com/upload/2010/09/MZ_Codebox.gif" width="600" height="70" alt="MZ_Codebox.gif"/></a></div>
+<p>
+In <a href="http://blog.makezine.com/archive/2010/12/save_sensor_data_to_google_spreadsh.html">Codebox: Save sensor data to Google Spreadsheets</a>, reader Stairs observed that the sketch blew up when he didn't have an Arduino device hooked up.  When he dug out the device, plugged it in, and restarted the sketch, it worked fine.  
+<p>
+This illustrates a great point about Processing, programming, and life in general: we live in an imperfect world. Nice little sketches get started with no Arduino plugged in, numbers are divided by zero, people run with scissors, and so on and so forth.  In Processing, conditions like these are called <i>exceptions</i>, and this post provides a gentle introduction on how to deal with (or, more officially, <i>handle</i>) them.  (<b>NB</b>: this post will not prevent running with scissors.)  
+<p>
+So, first, how does Processing let you know when something has gone really wrong?  In general (unless something has gone hugely wrong!), you'll start the sketch and then see something like the following figure:
+<p>
+<img src="http://blog.makezine.com/ano_arduino_serial_error_010411.png" width="600" height="442" alt="ano_arduino_serial_error_010411.png" />
+<p>
+Notice all the red error messages in the message area, which is where Processing tells you about what's gone wrong.  In this case, the error is  <i>PortInUseException()</i>, which, if you start Googling, you'll find has something of a checkered reputation in Processing.  (More on this later.)  The message also tells you on which line the error was <i>thrown</i>.  Additionally, the offending line is highlighted in yellow in the text editor.  Depending on where the error occurs, the sketch window may or may not appear, and even if it is visible, it almost certainly won't do what you expect.  
+<p>
+To reproduce this error (or one like it &mdash; see the caveats section at the bottom of the post!), paste the text for <a href="http://makezine.googlecode.com/svn/trunk/processing/exception/simple_port.pde">simple_port.pde</a> into Processing.  If all goes well, the sketch reads the serial port once a second and displays the elapsed time and the value read from the port.
+<p>
+<object data="http://makezine.googlecode.com/svn/trunk/processing/exception/simple_port.pde" type="text/plain" width="600" style="height: 600px; background-color: #cccccc"></object>
+<p>
+Of course, we don't want all to go well (that's the point of this post), so make sure your Arduino is unplugged when you run the sketch.  You should see something resembling the previous figure.  Now we're ready to add code to deal with (or <i>handle</i>, which is the formal term) the disconnected device.
+<p>
+To handle an exception in Processing (and Java, of which Processing is a subset), we place the suspect code inside a "try-catch-finally" block.  Processing then "tries" to execute the code, and if any exceptions are thrown, they're "caught" by other blocks.   The syntax looks like this:
+
+<code>
+<pre>
+try {
+   <i>The suspect code you want to try to execute</i>
+   ...
+} catch (ExceptionType1 e1) {
+   <i>// code to execute if ExceptionType1 is thrown in the try block</i>
+   println(e1.getMessage());
+   ...
+} catch (ExceptionType1 e2) {
+   <i>// code to execute if ExceptionType2 is thrown in the try block</i>
+   println(e2.getMessage());
+   ...
+} catch (ExceptionType3 e3) {
+   <i>// code to execute if ExceptionType3 is thrown in the try block</i>
+   println(e3.getMessage());
+   ...
+} finally {
+   <i>// Clean up code here</i>
+   ...
+}
+</pre>
+</code>
+<p>
+Since exceptions aren't covered in <a href="http://www.makershed.com/ProductDetails.asp?ProductCode=9781449379803">Getting Started with Processing</a>, let me answer a few general questions you might have:
+<ul>
+<li><b>What do you mean by <i>suspect code?</i></b>  Initially, you might think all code is suspect, but exception handling is mostly used in a few key circumstances, such as reading or writing to a file, pulling data across a network, or communicating with a device (like a serial port).  In fact, many libraries require you to enclose certain methods within a try-catch block or the code won't compile at all.  For example, if you removed the try block from the <a href="http://blog.makezine.com/archive/2010/12/save_sensor_data_to_google_spreadsh.html">google spreadsheet code</a>, the program wouldn't even compile.  Library designers do this to force programmers into good habits.</li>
+<li><b>What are all those catch statements about?</b> Since code can go wrong in all sorts of ways, we need to be able to handle a lot of different possibilities. So, each catch statement is associated with one particular type of error. If that specific type of error occurs, then the corresponding block of code executes.  For example, suppose you were trying to read some data from a file. The file simply might not exist, which throws a <i> FileNotFoundException</i> exception.  Or, the file might exist, but somehow becomes unavailable while you're reading it.  This throws an <i>EOFException</i>.  Or, something just plain weird happens in the IO stream, which throws a hail-mary <i>IOException</i>.  You can create a catch block for each of these circumstances.  Perhaps the best analogy is the if-then-else block described on page 64 of the Getting Started book.</li>  
+<li><b>What does the stuff in the parentheses after catch mean?</b>  These are like arguments to a function &mdash; the first token identifies the type of exception that should cause the block to fire, and the second is a variable that allows you to access the exception's data and methods.  (Exceptions, like everything in Processing, are objects.)  For example, if you had a line like this &mdash; <i> catch (FileNotFoundException e)</i>, that block would execute if the code in the try block couldn't find a file you were looking for.  Inside the block, you would have a variable called <i>e</i> that you could use to find out more about what was going wrong.  For example, you could use its <i>getMessage()</i> method to print the details of the error out to the message area</li>
+<li><b>Does the order of the catch statements matter?</b>  Yes. Processing will fire the first catch block that matches the exception's class <b>or</b> superclass.  Since objects are hierarchical, that means that some exceptions are higher up the food chain than others. Consequently, they match almost everything. (The highest ranking exception class is called <i>Exception</i>, which matches everything.) So, you need to put the most specific types exceptions first and more general exceptions later.</li>
+<li><b>What does "finally" mean?</b>  The <i>finally</i> block is optional and allows you to add code that will <i>always</i> executes, whether an error occurs or not.  This is usually used for cleanup code.  For example, if you open a file, you might want to close it in the finally block.</li>
+<li><b>What if I don't have the exact type of error in my catch blocks?</b>  The short answer is that your program blows up.  This is a situation, called an <i>unhandled exception</i>, is generally what you're trying to avoid.  As a final catch all, you can simply add a <i>catch (Exception e)</i> as the final catch block.  This is the most generic type of exception object, so it should catch most errors.</li>
+</ul>
+<p>
+Whew. Enough theory. Let's return to the original problem of preventing our code from blowing up. (Still, we've only scratched the surface.  If you want to learn more, check out <a href="http://download.oracle.com/javase/tutorial/essential/exceptions/index.html">Lesson: Exceptions</a>, a great tutorial from Oracle.)  
+<p>
+Since our code is blowing up on the line <i>port = new Serial(this, arduinoPort, 9600);</i>, this is a pretty obvious place to put a try-catch block.  What we want the code to do is test if there are any exceptions at all on this line (we don't really care what), and if there are, display a "Plug in Arduino" message.  As soon as an Arduino is plugged in, we want to start displaying the counter and the current value from the serial port.  Here's a revised version of the code, <a href="http://makezine.googlecode.com/svn/trunk/processing/exception/simple_port2.pde">simple_port2.pde</a>, that does this.
+<p>
+<object data="http://makezine.googlecode.com/svn/trunk/processing/exception/simple_port2.pde" type="text/plain" width="600" style="height: 600px; background-color: #cccccc"></object>
+<p>
+You should see something like the following figure when you run this code.
+<p>
+<img src="http://blog.makezine.com/ano_exception_handling_010411.png" width="600" height="191" alt="ano_exception_handling_010411.png" />
+<p>
+So, what's happening here?  The first thing you'll notice is that I moved the offending line out of the <i>setup()</i> method and into the <i>draw()</i> method.  This makes sure that the sketch will repeatedly test if the Arduino is found; doing the test in <i>setup()</i> would mean that it only happens once, when the sketch starts.  Next, I've created a flag called <i>ardinoOK</i> -- if this flag is false, we want to try to grab the port and display the error message.  If the flag it true true, then we want to read the port and display the values.  Finally, I've embedded the <i>port = new Serial(this, arduinoPort, 9600);</i> line inside a try-catch block.  If the command succeeds, then we set <i>arduinoOK</i> to true.  If an exception occurs, we catch it with the <i>catch (Exception e)</i> block and set <i>arduinoOK</i> to false.  Since this code is inside <i>draw()</i>, it repeats this logic over and over.  Voila!
+<p>
+<strong>Caveats</strong>
+<p>
+As I've hinted throughout, exception handling for this project has been a bit difficult to deal with.  For example, Stairs (the reader whose comment  kicked off this post) reported an <i>ArrayIndexOutOfBoundsExeption</i>. That implied that the code was blowing up at <i>String arduinoPort = Serial.list()[0]:</i>, indicating that there were no devices.  "Ha," I thought, I'll just test for that exception. However, when I ran it on my Mac, I found several devices already in the list, so it wasn't blowing up with the same error Stairs was getting. Pluggin in the Arduino merely added two new items to the list, as shown in the following table.  
+<p>
+<table>
+<tr>
+<th>No Arduino Installed</th>
+<th>Arduino Installed</th>
+</tr>
+<tr>
+<td>
+<pre>
+Stable Library
+=========================================
+Native lib Version = RXTX-2.1-7
+Java lib Version   = RXTX-2.1-7
+[0] "/dev/tty.Bluetooth-Modem"
+[1] "/dev/cu.Bluetooth-Modem"
+[2] "/dev/tty.Bluetooth-PDA-Sync"
+[3] "/dev/cu.Bluetooth-PDA-Sync"
+</pre>
+</td>
+<td>
+<pre>
+Stable Library
+=========================================
+Native lib Version = RXTX-2.1-7
+Java lib Version   = RXTX-2.1-7
+[0] "/dev/tty.usbmodem1d11"
+[1] "/dev/cu.usbmodem1d11"
+[2] "/dev/tty.Bluetooth-Modem"
+[3] "/dev/cu.Bluetooth-Modem"
+[4] "/dev/tty.Bluetooth-PDA-Sync"
+[5] "/dev/cu.Bluetooth-PDA-Sync"
+Experimental:  JNI_OnLoad called.
+</pre>
+</td>
+</tr>
+</table>
+<p>
+A bit of Googling indicated that Macs have a couple of processes running by default to pick up new devices, like cameras or bluetooth devices. So, I figured Stairs must be on a PC, which didn't have these items. 
+<p>
+However, my code was still blowing up, but for a different error: <i>gnu.io.PortInUseException</i>.  "Ha!," I though, I can just catch that one.  But, this didn't work, either. Googling around, I discovered that there seems to be a weird bug on OS X that makes catching this exception problematic, and that you have to reinstall or delete various portions of the Serial library to make them work. So, that didn't work either. Finally, I just  settled on catching the most generic <i>Exception</i> to get it to work.
+<p>
+Then, I wanted to do a bit more about how you'd catch errors while the sketch was running.  Specifically, I wanted to handle the case where the Arduino is plugged in, the sketch starts running, and the you unplug it mid-stream.  However, when I tried this, I got this error message which seemed to come from the operating system:
+
+<img src="http://blog.makezine.com/ano_usb_unplugged_error_010411.png" width="600" height="212" alt="ano_usb_unplugged_error_010411.png" />
+<p>
+Since it was handled higher up in the food chain, the error never flowed down into Processing as an exception, so the sketch just hummed along merrily.  Hmmm, I thought.  So, a bit of Googling revealed that it's very bad to do what I planned, and that it can lead to all sorts of problems. So, I guess the Mac has safeguards built in to prevent problems downstream.  I guess I should be thankful, but it bummed me out for this example. 
+<p>
+All this goes to show that it can be really, really difficult to pin down programming errors because there are so many complexities and interdependencies.  I think this is probably why so many programmers become Makers.  In a profession where 6 months can be an eternity, it's satisfying to know that the machines you build out of gears and levers would probably be comprehensible to Aristotle. Frankly, it's incredible that the world runs as smoothly as it does.  
+<p>
+Thank you, exception handlers everywhere!
+<p>
+<p><strong>In the Maker Shed:</strong></p>
+<a href="http://www.makershed.com"><img src="http://blog.craftzine.com/makershedsmall.jpg" height="45" width="200" alt="Makershedsmall" /></a></br>
+<div style="align: right;"><img src="http://blog.makezine.com/upload/2010/09/our_latest_make_book--getting_start/processingCover.jpg"  width="193" height="300" alt="processingCover.jpg"/></div><a href="http://www.makershed.com/ProductDetails.asp?ProductCode=9781449379803&Click=37845">Getting Started with Processing</a>
+Learn computer programming the easy way with Processing, a simple language that lets you use code to create drawings, animation, and interactive graphics. Programming courses usually start with theory,but this book lets you jump right into creative and fun projects.  It's ideal for anyone who wants to learn basic programming, and  serves as a simple introduction to graphics for people with some programming skills. </p>

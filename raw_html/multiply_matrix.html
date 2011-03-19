@@ -1,0 +1,54 @@
+A [url="http://simple.wikipedia.org/wiki/Matrix_(mathematics)"]matrix[/url] is a 2 dimensional array of numbers called elements.  Matrices are used in many different applications, representing sets of equations, transformations to 3D objects, or color filters, to name just a few.  This Answer explains how multiply two matrices in Processing.
+
+First, a matrix is usually characterized by its dimensions: the number of elements in its rows (the numbers going across ) and columns (the numbers going up and down).  By convention, the number of rows always comes first. The following figure shows a 2 row by 3 matrix, which is generally just called a 2x3 matrix, and a 3x2 matrix:
+
+[attachment=1048:matrices.png]
+
+To multiply two matrices together (lets call them A and B), the number of columns in A must equal the number of rows in B.  This is critical -- if this isn't true, then the multiplication is not defined.  (This is sort of like dividing by zero -- it's simply impossible.)  
+
+Assuming this criteria is met, the product of the two matrices (lets call it C) will have the same number of rows as A and the same number of columns as B.  
+The elements in C are equal to the sum of the products of the corresponding column element in A times the row element in B.  This is a bit tricky, but the following figure should (hopefully!) make this a bit clearer:
+
+[attachment=1049:matrix_mult.png]
+
+So, this is great an all, but at this point you're probably wondering "This is great and all, but how do I code this?"  The following Processing code sample shows you how:
+
+[code]
+
+// Create a 2x3 matrix
+float[][] A = {
+  {1.0, 0.0, 0.0},
+  {1.0, 0.5, 1.0}
+};
+
+// Create a 3x2 matrix
+float[][] B = {
+  {2.0, 0.0 },
+  {1.0, 3.0},
+  {3.0, 0.5}
+};
+
+// Create a 2x2 matrix to hold the product
+float[][] C = new float[2][2];  //result matrix
+
+//This section performs the actual multiplication
+for (int i=0; i < C.length; i++) { //Loop through each row in C
+   for (int j=0; j < C[0].length; j++) {  //Loop through each col in C
+      for (int k=0; k < B.length; k++) { 
+         //The element C[i][j] is the sum of the products of the row in A * the col in C  
+         C[i][j] += A[i][k] * B[k][j];  // that row in A * that col in B
+      }
+   }
+}
+
+//Print out the results
+for (int i=0; i < C.length; i++) {
+  for (int j=0; j < C[0].length; j++) {
+     println("[" + i + "][" + j + "] = " + C[i][j]);
+  }
+}
+
+
+[/code]    
+
+On its own, this is not very exciting, but it's the basis for a lot of interesting applications I'll explore in some other Answers.

@@ -1,0 +1,275 @@
+After several people complained that they were worried that [url="http://answers.oreilly.com/topic/1463-create-3d-photographs-with-processing/"]wiggle stereoscopy[/url] might trigger a seizure, I thought it made sense  to revisit the subject and show how to create real 3D images.  For the full effect, you'll need to get a pair of [url="http://www.amazon.com/3D-Glasses-Blue-Anaglyph-Pair/dp/B001D5VCBC/ref=sr_1_33?ie=UTF8&s=toys-and-games&qid=1275613889&sr=8-33"]Red/Blue glasses[/url] on Amazon, or alternatively, [url="http://www.labnol.org/home/make-3d-glasses/13776/"]hack up a pair yourself[/url].  Once you have the glasses, you'll be able to use the Processing script at the bottom of the page to create and view 3D photographs like these:
+
+[attachment=1109:hydrant.png]
+[attachment=1110:lake.png]
+[attachment=1111:radcliffe_3d.png]
+
+[b]Stereoscopy in a Nutshell[/b]
+Stereoscopy is a technique of fusing two slightly offset images into a single image in a way that creates an illusion of depth.  The classic 3D technique, called anaglyphic stereoscopy, applies a [url="http://answers.oreilly.com/topic/1539-create-image-filters/"]red filter[/url] to the left eye's image and a blue filter to the right eye's image.  The offset images are then aligned on the subject and fused into a single image.  When viewed through a pair of 3D glasses, the technique can create a very effective sense of depth.  The following image should give you the basic concept:
+
+[attachment=1107:depth_perception.png]
+
+The rest of this Answer will walk you through the process of creating your own images.  I'll make frequent reference to the script at the bottom of the post, which is where you'll find the code you need.
+
+[b]Take the pictures[/b]
+ The first step is to pick a subject and then take two photographs.  Basically, all you have to do is take the picture as you normally would, and then smoothly slide the camera to the opposite eye and take the same picture again.  As much as you can, try to keep the camera's at the same angle and rotation the same in both images.  Otherwise, you'll have some distortions.  Also, since there is a time lag between images in this techniques, try to keep the subject as still as possible.  
+
+Download the images off your camera and then save them to a common format (jpg, png, etc).  Be sure to use the same settings, particularly size, when you export them.  As a final step, use a simple naming convention like "foo_l.png" and "foo_r.png" to keep up with the paired images.  Once you've saved the 2 images, you'll need to tell Processing where to find them.  You do this by changing the first two lines:
+
+[code]
+PImage left = loadImage("/Users/odewahn/Desktop/lake_l.png");
+PImage right = loadImage("/Users/odewahn/Desktop/lake_r.png");
+[/code]
+
+The next steps are all performed in the Processing script, but I'll explain what's going on. 
+
+[b]Align the subject[/b]
+When you first start the script, you'll see a blurry image with two ghostly images, one red and the other blue.  You must then shift one of the images around until the subject overlaps, which you can do with the following keys:
+
+* k - shift left
+* l - shift right
+* q - shift up
+* a - shift down
+* 1 - shift by 10 pixels at a time
+* 2 - shift by 1 pixel at a time (for fine adjustments)
+* o - save the merged image to a file
+
+When you've completed the process, the image will look almost normal, but you'll notice that objects in the background of the image will have a sort of subtle halo of red or blue around them.  The script will look something like this (sorry for the rather low-res video, BTW.  If anyone has any suggestions on how to get a good video of a screencast on YouTube, I'd appreciate it!).:
+
+[media]http://www.youtube.com/watch?v=H7d2TEXMeD4[/media]
+
+[b]Compute the overlapped region[/b]
+As you shift the images around, you're only interested in keeping the portions that overlap.  This is a bit tricky to code, and there are many possible approaches.  Here's the one I took.
+
+Imagine for a moment that both images have been printed in color on [url="http://www.amazon.com/Premium-InkJet-Transparency-Sheets-C3834A/dp/B00000JKJ2"]transparency film[/url].  Next, suppose you held the right image still (it doesn't matter which, but I'm going to use the right image in this example) and treated its upper-left corner as the origin (0,0).  Finally, imagine sliding the left image around on top of the now stationary right image.  The X and Y offsets between the two images' upper-left corner is now a convenient measure of the relative shift.  (From now on, I'll call the X-offset rx and the Y-offset ry.)  Initially, everything on both images overlaps, but as you moved the left piece around to align the subjects, portions of it would stick out over the sides of the stationary image.  Since we're only interested in where the two images overlap, we need to trim away the portions that stick out.
+
+Now to implement the model in Processing.  First, we'll characterize the overlapping area first by its width and height.  Second, we'll define its X and Y position as the location of its upper-left corner as it falls within the stationary image.  The following figure (hopefully!) illustrates this rather abstract concept.  It presents a matrix of possible scenarios for rx and ry, as well as a simple diagram that shows how the overlap (represented by diagonal lines) is defined in that scenario.  
+
+[attachment=1108:offset_matrix.png]
+
+Armed with this diagram, we're ready to write the code for the overlap.  (In the snippet, W is the width of the two images and H is their height..)  Here's the snippet that shows how to do it:
+
+[code]
+  //Computes the intersection between the two image based on the current offset
+  void compute() {
+    if (rx < 0) {
+       if (ry < 0) {
+          // Case A
+          w = W + rx;
+          h = H + ry;
+          x = 0;
+          y = 0;
+       } else {
+          //Case C
+          w = W + rx;
+          h = H - ry;
+          x = 0;
+          y = ry;
+       }
+    } else {
+       if (ry < 0) {
+          //Case B
+          w = W - rx;
+          h = H + ry;
+          x = rx;
+          y = 0;
+       } else {
+          //Case D
+          w = W - rx;
+          h = H - ry;
+          x = rx;
+          y = ry;
+       }
+    }
+  }
+[/code]
+
+Merging the filtered images  is a relatively straightforward application of the technique outlined in [url="http://answers.oreilly.com/topic/1539-create-image-filters/"]create image filters[/url].  The main difference in the sketch presented here and the one in the Answer on filters is that I've solved the [url="http://answers.oreilly.com/topic/1522-multiply-matrices-in-processing/"]matrix multiplications[/url] for the "half color anaglyph" described in this [url="http://3dtv.at/Knowhow/AnaglyphComparison_en.aspx"]Anaglyph Methods Comparison[/url].  This makes he code a good bit faster.
+
+So, here, for all you people that hated wiggle stereoscopy, is the code to create 3D Anaglyphs:
+
+[code]
+PImage left = loadImage("/Users/odewahn/Desktop/lake_l.png");
+PImage right = loadImage("/Users/odewahn/Desktop/lake_r.png");
+String outfile = "/Users/odewahn/Desktop/out.png";
+
+int rx = 0;  // x offest
+int ry = 0;  // y offset
+int dSize = 10;  // # of pixels to shift
+Intersection overlap;
+
+PImage merged;
+
+class Intersection {
+  //Defines the overlap reqion
+  int w, h; // width and height of overlap 1
+  int x, y; // x,y of the top left point of the overlap
+  
+  // Defines the width and height of the 2 reqions.  They must be of equal size.
+  int W, H;  // Width and height of the 2 regions
+  int rx, ry;  // x,y position of region
+  
+  //Defines the mapping of a point p in the overlap into a point in region 1 and region 2
+  int eqX1, eqY1;
+  int eqX2, eqY2;
+  
+  //Construct a new region
+  Intersection(int _W, int _H) {
+    W = _W;
+    H = _H;
+  }
+  
+  // Set the offset values of region 2
+  void setOffset (int _rx, int _ry) {
+    rx = _rx;
+    ry = _ry;
+    compute();
+  }
+  
+  //Computes the intersection between the two image based on the current offset
+  void compute() {
+    if (rx < 0) {
+       if (ry < 0) {
+          // Case A
+          w = W + rx;
+          h = H + ry;
+          x = 0;
+          y = 0;
+       } else {
+          //Case C
+          w = W + rx;
+          h = H - ry;
+          x = 0;
+          y = ry;
+       }
+    } else {
+       if (ry < 0) {
+          //Case B
+          w = W - rx;
+          h = H + ry;
+          x = rx;
+          y = 0;
+       } else {
+          //Case D
+          w = W - rx;
+          h = H - ry;
+          x = rx;
+          y = ry;
+       }
+    }
+  }
+  
+  //Given a point (x,y) in the intersection, this method finds the correspongin point in the 2 regions
+  void findEquivPoint (int x, int y) {
+    if (rx < 0) {
+       if (ry < 0) {
+          // Case A
+          eqX1 = x;
+          eqY1 = y;
+          eqX2 = x - rx;
+          eqY2 = y - ry;
+       } else {
+          //Case C
+          eqX1 = x;
+          eqY1 = y + ry;
+          eqX2 = x - rx;
+          eqY2 = y;
+       }
+    } else {
+       if (ry < 0) {
+          //Case B
+          eqX1 = x + rx;
+          eqY1 = y;
+          eqX2 = x;
+          eqY2 = y - ry;
+       } else {
+          //Case D
+          eqX1 = x + rx;
+          eqY1 = y + ry;
+          eqX2 = x;
+          eqY2 = y;
+       }
+    }     
+  }
+}
+
+//Create a merged image
+PImage merge() {
+  int loc;
+  PImage merged = createImage(overlap.w, overlap.h, RGB);
+  left.loadPixels();
+  right.loadPixels();
+  merged.loadPixels();
+  //now process the left and right pixels one by one and merge them into a new color
+  for (int x = 0; x < overlap.w; x++) {
+    for (int y = 0; y < overlap.h; y++) {
+      overlap.findEquivPoint(x,y);
+      loc = overlap.eqX1 + overlap.eqY1*overlap.W;
+      //Pull out RGB for the left image
+      float r1 = red(left.pixels[loc]);
+      float g1 = green(left.pixels[loc]);
+      float b1 = blue(left.pixels[loc]);
+      // Pull rgb for the right image
+      loc = overlap.eqX2 + overlap.eqY2*overlap.W;
+      float r2 = red(right.pixels[loc]);
+      float g2 = green(right.pixels[loc]);
+      float b2 = blue(right.pixels[loc]);
+      //Compute new pixel color in the merged image
+      float r = 0.299 * r1 + 0.587 * g1 + 0.114 * b1;
+      float g = g2;
+      float b = b2;
+      //Now set new color
+      loc = x + y*merged.width;
+      merged.pixels[loc] = color(r,g,b);
+    }
+  }
+  return merged;
+}
+
+
+
+void setup() {
+  size(left.width, left.height);
+  overlap = new Intersection(left.width, left.height);
+  overlap.setOffset(0,0);
+  merged = merge();
+}
+
+
+void keyPressed() {
+  switch (key) {
+     case 'q':
+        ry -= dSize;
+        break;
+     case 'a':
+        ry += dSize;
+        break;
+     case 'l':
+        rx += dSize;
+        break;
+     case 'k':
+        rx -= dSize;
+        break;
+     case '1':
+        dSize = 10;
+        break;
+     case '2':
+        dSize = 1;
+        break;
+     case 'e':
+        merged.save(outfile);
+        break;
+  }
+  overlap.setOffset(rx,ry);
+  merged = merge();
+}
+
+void draw() {
+   background(#ffffff);
+   image(merged,0,0);
+}  
+
+
+[/code]
+
+Enjoy, and be sure to post your photos in the comments.

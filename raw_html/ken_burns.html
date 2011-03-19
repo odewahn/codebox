@@ -1,0 +1,193 @@
+<div style="align: right;"><a href="http://mt.makezine.com/cgi-bin/mt/mt-search.cgi?blog_id=1&Template=tag_display&tag=@codebox"><img src="http://blog.makezine.com/upload/2010/09/MZ_Codebox.gif" width="600" height="70" alt="MZ_Codebox.gif"/></a></div>
+<p>
+
+This Codebox shows how to use the Flickr API to create a Ken Burns-style movie from your photos, like this one for Maker Faire:
+<iframe src="http://player.vimeo.com/video/19874963?title=0&amp;byline=0" width="600" height="450" frameborder="0"></iframe>
+<p>
+You'll need to supply your own melancholy period music.
+<p>
+<strong>Set up the sketch</strong>
+<p>
+The first thing you'll need to do to is create an account (if you don't have one already) and sign into Flickr.  Once you're logged in, the next step is to <a href="http://www.flickr.com//services/apps/create/apply/">get an API key</a> to uniquely identify your app.  (Well, the key doesn't so much identify the app as it identifies that <i>you</i> are running the app.)  You'll be prompted to give the app a name (I called it "Ken Burns App") and a description.  
+<p>
+Once you create the app record, you'll get back two pieces of information: an "app key," which uniquely identifies the app, and a "secret," which is used cryptographically sign the URL.  (We won't be using signed URLs in this example, but I can post the code if you're interested.  Just leave a comment if you want to see it.)  It should look something like this:
+<p>
+<img src="/wp-content-svn/media/blog.makezine.com/2011/02/ano_021511_get_app_key.png" width="600">
+<p>
+<p>
+Once you've got the key, fire up Processing and paste <a href="http://makezine.googlecode.com/svn/trunk/processing/ken_burns_flickr/ken_burns_flickr_final.pde">ken_burns_flickr_final.pde</a> into the sketch window.  Here's the codebox:
+
+<!--more-->
+
+<object data="http://makezine.googlecode.com/svn/trunk/processing/ken_burns_flickr/ken_burns_flickr_final.pde" type="text/plain" width="600" style="height: 600px; background-color: #cccccc"></object>
+<p>
+You'll need to replace the variable <i>apiKey</i> and <i>sharedSecret</i> with the values you got from Flickr.  While you're at it, you can also mess around with some of the other variables.  For example, if you'd like to search for another term than "faire," you can change the "tags" variable.  (Note that you need to URL encode any values you search for, which mostly means that you need to replace spaces with "+" sign.)  Or, if you'd like more (or fewer) images in the movie, you can update the <i>numPhotos</i> variable.
+<p>
+<strong>Discussion</strong>
+<p>
+This is one of the more complex projects in this series, so I've broken the discussion into the following buckets:
+<ul>
+<li>Pulling data from Flickr</li>
+<li>Panning and zooming the images</li>
+<li>Creating a movie</li>
+</ul>
+<p>
+We'll be using the <a href="http://processing.org/reference/XMLElement.html">XMLElement</a> and the <a href="http://processing.org/learning/topics/arraylistclass.html">ArrayList</a> classes and a good bit.  If you need a quick refresher, check out <a href="http://blog.makezine.com/archive/2010/11/codebox-amuse-yourself-with-google.html">Amuse yourself with Google Autocomplete</a> and <a href="http://blog.makezine.com/archive/2010/09/codebox-swat-an-arraylist-of-target.html">Swat An (Arraylist) Of Targets</a>. They should give you the background you'll need to follow the examples if you're feeling lost.
+<p>
+<strong>Pulling data from Flickr</strong>
+<p>
+The <a href="http://www.flickr.com/services/api/">flickr api</a> allows you to read (and write, but we won't be doing that here) data about the images, groups, collections, and photographs on the site.  Data is returned in XML, although other formats are available.
+<p>
+So, let's dive right in and take a look at <a href="http://www.flickr.com/services/api/flickr.groups.pools.getPhotos.html">flickr.groups.pools.getPhotos</a>.  This call returns a list of pool photos for a given group.  It can accept a variety of parameters, such as the <i>api_key</i> (this is required for almost all calls), the <i>group_id</i> (MAKE's group id is 69453349@N00), the <i>tags</i> you want the image to match, and the number of results you want on each page (called <i>per_page</i>).
+<p>
+If you scroll to the bottom of the call's documentation page, you'll find a handy link called <a href="http://www.flickr.com/services/api/explore/?method=flickr.groups.pools.getPhotos">API Explorer : flickr.groups.pools.getPhotos</a>.  This links to an interactive form where you can try out the various parameters and get the results of the call; each call in the API has similar functionality. (Also, I found I had to use Firefox to see the XML output.  YMMV.)  Select "Do not sign call" in the radio button because (as discussed earlier) we're not going to be uses authenticated API calls.    
+<p>
+Here's a figure that should help explain what's going on:
+<p>
+<img src="/wp-content-svn/media/blog.makezine.com/2011/02/ano_021511_ken_burns.png"  width="600"/>
+<p>
+The Explorer is the best way to quickly see the XML data returned by a call. In this case, the XML looks like this:
+<p>
+<pre>
+<code>
+&lt;rsp stat="ok"&gt;
+   &lt;photos page="1" pages="13" perpage="100" total="1229"&gt;
+      ...
+      &lt;photo id="5032437449" owner="37037184@N05" secret="d15af10a4e" 
+         server="4085" farm="5" title="Mark Frauenfelder" ispublic="1" 
+         isfriend="0" isfamily="0" ownername="segwaymonkey" dateadded="1285673760"/&gt;
+      ...
+      &lt;photo id="5031045207" owner="88608740@N00" secret="60be669918" 
+        server="4124" farm="5" title="20100926-DSC00898" ispublic="1" 
+       isfriend="0" isfamily="0" ownername="timmyj1138" dateadded="1285631093"/&gt;
+   &lt;/photos&gt;
+&lt;/rsp&gt;
+</code>
+</pre>
+The photo data we're after resides in the first child element off the root node.  Our code will need to loop through all these child nodes, pull out the attributes we're interested in, and store them in an ArrayList for later use.  
+<p>
+Finally, you'll find the URL required to generate this data just under the XML box.  Here it is:
+<p>
+<pre>
+<code>
+http://api.flickr.com/services/rest/?method=flickr.groups.pools.getPhotos
+   &api_key=4bdfeb8048562c5d12d0c7cda3ae341e&group_id=69453349%40N00
+   &tags=faire
+   &per_page=5
+</code>
+</pre>
+<p>
+So, now that we know the URL we need and the XML we're going to get, we can write some code to parse the data.  Here it is:
+<p>
+<pre>
+<code>
+//Pulls out the first 100 phots in the makezin flickr pool
+void getPhotosByGroup(String _groupId, String _tags) {
+&nbsp;&nbsp;// Set up the call to get the Token, as described here:
+&nbsp;&nbsp;// http://www.flickr.com/services/api/auth.howto.desktop.html
+&nbsp;&nbsp;String url = "http://api.flickr.com/services/rest/?api_key="+apiKey+"&amp;group_id="+_groupId+"&amp;tags="+_tags+"&amp;method=flickr.groups.pools.getPhotos&amp;per_page="+numPhotos;
+&nbsp;&nbsp;String[] results = loadStrings(url); //Load the URL
+&nbsp;&nbsp;XMLElement xml = new XMLElement(join(results,"\n")); //Collapse array elements into a string
+&nbsp;&nbsp;String[] errCodes = getStatus(xml); //Pull error codes (if any) from the XML
+&nbsp;&nbsp;if (errCodes[0].equals("ok")) {
+&nbsp;&nbsp; XMLElement root = xml.getChild(0);
+&nbsp;&nbsp; for (int i=0; i &lt; root.getChildCount(); i++) {
+&nbsp;&nbsp; String id = root.getChild(i).getStringAttribute("id");
+&nbsp;&nbsp; String owner = root.getChild(i).getStringAttribute("owner");
+&nbsp;&nbsp; String title = root.getChild(i).getStringAttribute("title");
+&nbsp;&nbsp; photos.add( new Photo(id, title, owner));
+&nbsp;&nbsp; }
+&nbsp;&nbsp;} else {
+&nbsp;&nbsp; println ("Error! Here are some codes:\n" + errCodes);
+&nbsp;&nbsp;}
+}
+</code>
+</pre>
+<p>
+If you've been following the other columns in this series, nothing should look that unfamiliar.  All we're doing is creating a string that's a template for the URL we need, pulling the contents of the page using <i>loadString()</i>, and then processing it with XMLElement.  
+<p>
+Perhaps the only wrinkle is that we're doing a bit of error checking using a procedure called <i>getStatus()</i> to  see if something has gone wrong in the call.  For example, if we passed in an invalid API key in the URL, we'd get an error code in the XML instead of useful information:  
+<p>
+<pre>
+<code>
+&lt;?xml version="1.0" encoding="utf-8" ?&gt;
+&lt;rsp stat="fail"&gt;
+&lt;err code="100" msg="Invalid API Key (Key has invalid format)" /&gt;
+&lt;/rsp&gt;
+</code>
+</pre>
+<p>
+Once we've read in the meta data about the images, we need to use the <a href="http://www.flickr.com/services/api/flickr.photos.getSizes.html">flickr.photos.getSizes</a> to find the URLs for various images associated with a particular photo ID.  The call returns a structure with information about the various image sizes (thumbnails, square, small, large, etc.)  Flickr stores for each photo.  Here's an example:
+<pre>
+<code>
+&lt;rsp stat="ok"&gt;
+   &lt;sizes canblog="1" canprint="0" candownload="0"&gt;
+      &lt;size label="Square" width="75" height="75" 
+         source="http://farm5.static.flickr.com/4085/5032437449_d15af10a4e_s.jpg" 
+         url="http://www.flickr.com/photos/arduino/5032437449/sizes/sq/" 
+         media="photo"/&gt;
+      &lt;size label="Thumbnail" width="100" height="67" 
+         source="http://farm5.static.flickr.com/4085/5032437449_d15af10a4e_t.jpg" 
+         url="http://www.flickr.com/photos/arduino/5032437449/sizes/t/" 
+         media="photo"/&gt;
+      &lt;size label="Small" width="240" height="160" 
+         source="http://farm5.static.flickr.com/4085/5032437449_d15af10a4e_m.jpg" 
+         url="http://www.flickr.com/photos/arduino/5032437449/sizes/s/" 
+         media="photo"/&gt;
+      &lt;size label="Medium" width="500" height="333" 
+         source="http://farm5.static.flickr.com/4085/5032437449_d15af10a4e.jpg" 
+         url="http://www.flickr.com/photos/arduino/5032437449/sizes/m/" 
+         media="photo"/&gt;
+      &lt;size label="Medium 640" width="640" height="427" 
+         source="http://farm5.static.flickr.com/4085/5032437449_d15af10a4e_z.jpg"
+         url="http://www.flickr.com/photos/arduino/5032437449/sizes/z/" 
+         media="photo"/&gt;
+      &lt;size label="Large" width="1024" height="683" 
+         source="http://farm5.static.flickr.com/4085/5032437449_d15af10a4e_b.jpg" 
+         url="http://www.flickr.com/photos/arduino/5032437449/sizes/l/" 
+         media="photo"/&gt;
+&lt;/sizes&gt;
+&lt;/rsp&gt;
+</code>
+</pre>
+<p>
+This code is all handled in the <i>getPhotoURL()</i> method, which is almost identical in structure to <i> getPhotosByGroup()</i>.  Once we have the URL, we can load the image using <i>loadImage()</i>.
+<p>
+<strong>Panning and zooming</strong>
+<p>
+Once we've pulled in the image, we're ready to start panning and zooming in the Ken Burns style.  As demonstrated by this <a href="http://wiki.processing.org/w/Pan_a_large_image">Pan a large image</a> example from the Processing community, we can use buffering tocreate the panning effect.  On each iteration of <i>draw()</i>, we'll update the (x,y) coordinates of buffer so that it moves smoothly along a predetermined vector.  This figure illustrates the key variables involved:
+<p>
+<img src="/wp-content-svn/media/blog.makezine.com/2011/02/ano_02142011_zoom_and_pan.png" width="600">
+<p>
+Zooming is even easier -- we just increase a variable called <i>zoom</i> by a small percentage called <i>zoomFactor</i>, and then use Processing's <i>scale()</i> function to do the appropriate transformation.
+<p>
+All the updates to the various variables are made in the <i>draw()</i> method. 
+<p>
+<strong>Creating the movie</strong>
+<p>
+Creating the movie is slightly trickier.  Well, I take that back -- creating the movie file and adding frames to it is dead simple, thanks to the great <i><a href="http://processing.org/reference/libraries/video/MovieMaker.html">MovieMaker</a></i> contributed library. The library does all the messy, hard work.  To use it, we reate a new <i>MovieMaker</i> object in <i>setup()</i>, add frames to it in <i>draw()</i>, and then call the <i>finish()</i> method when we're done.  The tricky part is controlling what those frames contain and how long they are displayed.
+<p>
+The content is fairly straightforward -- it's the copy buffer we just discussed in the pan and zoom section.  Each iteration of <i>draw()</i> gives us a slightly different frame.  Stringing the frames together creates a nice, animated image.  All we need to do is write each frame in the animation into the movie file.  Conveniently, MovieMaker's <i>addFrame()</i> method does just that -- it saves whatever is currently displayed in the sketch's display window into the movie file.  To make the movie a bit more authentic seeming -- and just to show how it's done -- I added in a title bar with the picture's title and creator.  These are just done with standard Processing graphics commands.
+<p>
+Controlling how many frames to generate per image is the tricky part.  The first thing to understand is that the frame rate of the sketch (the number of times <i>draw()</i> executes a second) is different than the frame rate of the movie.  For example, suppose you set the movie's frame rate to 60 frames per second (FPS).  Regardless of how long it takes to generate an image on the screen, that image will be displayed in one sixtieth of a second in the movie.  So, while you might have an effective frame rate of 6 frames per second in your sketch because it takes 10 seconds to render some complex image, the movie's frame rate is constant.  It will take 600 seconds of Processing time to generate the 1 second of movie time.  
+<p>
+Managing this timing disconnect requires us to manually keep track of the number of frames we've added to the movie.  In the Ken Burns example, this is done in the variable <i>panFrameIdx</i>, which increments on every pass through </i>draw()</i>.  The sketch compares this value to a baseline that tells us how many frames we want to display per image.  After experimenting a bit, I found that panning and zooming between 2 and 4 seconds gave the best results, like this:
+
+<code>
+<pre>
+   float MIN_PAN_SECS = 2;  // Min time to display photo
+   float MAX_PAN_SECS = 4;  // Max time to display photo
+   ...
+   framesToDisplay = (int) (FPS * random(MIN_PAN_SECS, MAX_PAN_SECS));
+   if (panFrameIdx &gt; framesToDisplay) {
+      ...
+</pre>
+</code>
+<p>
+Once the sketch has generated the number of frames required for the image, it loads in the next image and repeats the process.
+
+
+<p><strong>In the Maker Shed:</strong></p>
+<a href="http://www.makershed.com"><img src="http://blog.craftzine.com/makershedsmall.jpg" height="45" width="200" alt="Makershedsmall" /></a></br>
+<div style="align: right;"><img src="http://blog.makezine.com/upload/2010/09/our_latest_make_book--getting_start/processingCover.jpg"  width="193" height="300" alt="processingCover.jpg"/></div><a href="http://www.makershed.com/ProductDetails.asp?ProductCode=9781449379803&Click=37845">Getting Started with Processing</a>
+Learn computer programming the easy way with Processing, a simple language that lets you use code to create drawings, animation, and interactive graphics. Programming courses usually start with theory,but this book lets you jump right into creative and fun projects.  It's ideal for anyone who wants to learn basic programming, and  serves as a simple introduction to graphics for people with some programming skills. </p>

@@ -1,0 +1,130 @@
+The last <a href="put%20link%20here">codebox on magic wands</a> showed how to use your webcam to (sort of) replace your mouse with a magic wand. In the example, moving your wand into a circular region on the screen caused the emanating rays to change to a random color. This Codebox builds on that example and shows how to create more sophisticated interaction. Rather than a single, stationary target, this sketch presents a number of flying targets. Touching the target (the word "hat") turns it into another word (in this case, "rabbit"), as shown here:
+<p>
+<p><iframe src="http://player.vimeo.com/video/14490793" width="600" height="450" frameborder="0"></iframe></p>
+<p>
+<p>The sketch illustrates how to create and manage a list of interactive objects. Whether you're writing games, <a href="http://processing.org/learning/topics/smokeparticlesystem.html">particle systems</a>, or an Arduino controlled magic show (OK, so I've tipped my hand -- this is the subject of a future post), these are tools you'll use again and again as you go further with Processing.</p>
+<p><strong>Set up the sketch</strong></p>
+<p>First things first -- let's get the sketch up and running. You'll need two files for this project: <i>magic_words.pde</i> and <i>Target.pde</i>. First, fire up Processing and paste the following code for <a href="http://makezine.googlecode.com/svn/trunk/processing/magic_words/magic_words.pde">magic_words.pde</a> into the main window.</p>
+<p><object data="http://makezine.googlecode.com/svn/trunk/processing/magic_words/magic_words.pde" type="text/plain" width="600" style="height: 600; background-color: #cccccc">
+  </object></p>
+<p>You can either highlight the first line, scroll all the way down and then use ctrl-c to copy the code (hard), or you can click on this link (<a href="http://makezine.googlecode.com/svn/trunk/processing/magic_words/magic_words.pde">magic_words.pde</a>), press ctrl+a to select all the text, and then use ctrl+c to copy it (easier). Once you've copied the code, go back to Processing and paste it into the main window.  Then, use "File -&gt; Save" from the menu bar (or just ctrl+s) and save the file using the name "magic_words" (Processing will add the ".pde" automatically).</p>
+<p>Here's <a href="http://makezine.googlecode.com/svn/trunk/processing/magic_words/Target.pde">Target.pde</a>, the second file you need:</p>
+<p><object data="http://makezine.googlecode.com/svn/trunk/processing/magic_words/Target.pde" type="text/plain" width="600" style="height: 600; background-color: #cccccc">
+  </object></p>Copy the code into your paste buffer using whatever method you prefer (i.e., highlighting it all or linking directly to the file). This time, you'll need to create a new <i>tab</i>, which is the way that Processing allows you to manage sketches with multiple files. (This is sort of like creating a new tab in a browser window).
+<p>
+<p>To create a tab, click the right-pointing arrow at the upper, right hand corner of the Processing window. Processing will ask you for a new file name -- enter "Target". Once you've entered the file name, a new tab will appear where you can paste in the code. The following diagram should give you the steps you need:</p>
+<p><img src="http://blog.makezine.com/ano_add_tab_090910.png" width="600" height="460" alt="ano_add_tab_090910.png" /></p>
+<p>The last thing we need to do is create a nice font for the target. (Fonts are discussed in Chapter 6 of <a href="http://oreilly.com/catalog/0636920000570" title="Getting Started with Processing">Getting Started with Processing</a>). Why, you ask? Out of the box, Processing has just a simple command called <i>text()</i> that will display text, but you can't tell how much space they occupy on the screen (which will be important, as we'll see in a minute). Plus, they're just you're plain old Arial font, so they aren't very interesting.</p>
+<p>To get around this, you can use the Tools menu to create a new font file for your sketch. After you import the file using the <i>loadFont()</i> command, you'll be able to play around with typography. (W00t!). Anyway, the process for creating a font is straightforward. First, click "Tools -&gt; Create Font..." from the menu bar, which will pop up the following screen:</p>
+<p><img src="http://blog.makezine.com/ano_create_font_090810.png" width="600" height="453" alt="ano_create_font_090810.png" /></p>
+<p>Then, all you have to do is select the font you want (I chose "Baskerville-Bold"; if you want to use a different font, you'll have to change the name of the font file in <i>magic_words.pde</i>). Notice that the file name at the bottom of the box changes as you select different options -- this is the file name you'll need to use in the sketch; Processing will add ".vlw" to the end automatically.</p>
+<p>Once you have the two files loaded and the font installed, run the sketch. (As with most of the projects in this series, you'll also need a webcam.) Using the the wand (or any other suitable pointer) from the last Codebox, you should be able to swat the various targets.</p>
+<p>
+The next two sections describe how the sketch works.  The first part describes the code in the Target.pde file, which is used to create the Target object, the main building block of the script.  The second section describes how the magic_words.pde file uses and ArrayList to manage multiple Target objects.
+<p>
+<p>
+<p><strong>The Target object</strong></p>
+<p>Chapter 9 of <a href="http://oreilly.com/catalog/0636920000570" title="Getting Started with Processing">Getting Started with Processing</a> introduces objects and object-oriented programming (OOP). To review briefly, an object is a building block used to create more sophisticated programs. Objects contain two basic elements: <i>fields</i>, which are variables that determine the object's current state, and <i>methods</i>, which are just functions that make the object do something. A key part of the power of OOP is that it helps you think about your code in a physical way by encouraging you to think in terms of simpler components.</p>
+<p>To use objects, you first create a <i>class</i> (or several classes -- you can use many different objects), which is like a template that describes everything the object can do. Once you've defined the class, you use the <i>new</i> command to actually create objects that you can use in your sketches. This distinction can be a bit confusing, so think of it this way. If you were baking a cake, you'd start with a recipe. This is like a class -- you have a description, but a cake itself. To get the cake -- or object -- you have to follow the recipe before you have anything to eat. Creating new objects is the job of Processing's <em>new</em> command -- it makes a new object variable by calling a special method called the <em>constructor</em>. The constructor initializes the object's variables and generally gets it ready for action; the only difference between it and any other method is that it has the same name as the class itself.</p>
+<p>OK, enough review. Let's talk about the code. As discussed earlier, the Target class is a building block. Its fields include:</p>
+<ul>
+  <li>Current position, as represented by the variables <i>x</i> and <i>y</i></li>
+
+  <li>Speed and direction, as represented by the variables <i>dx</i> and <i>dy</i>. These are just randomly chosen values.</li>
+
+  <li>Width and height, as represented by the variables <i>w</i> and <i>h</i></li>
+
+  <li>Font size (more on this in a bit)</li>
+
+  <li>A flag indicating whether the wand is touching the target (<i>flag</i> is the programming term for any variable used to represent a specific status, like <i>on</i> or <i>off</i>)</li>
+
+  <li>The current text of the target (i.e., "Hat" or "Rabbit")</li>
+</ul>
+<p>After the mandatory <i>Target()</i> constructor (it's only job is to set the values of the befofe and after text for the target),the methods include:</p>
+<ul>
+  <li><i>step()</i>, which makes the target move around the stage. This works by adding the the <i>dx</i> and <i>dy</i> to the <i>x</i> and <i>y</i> variables.</li>
+
+  <li><i>paint()</i>, which draws the target on the stage at the (<i>x</i>, <i>y</i>) position</li>
+
+  <li><i>detectCollision()</i>, which determines if the wand has collided with the target</li>
+
+  <li><i>setBox()</i>, which updates the target's width and height variables based on whether it's been touched by the wand</li>
+
+  <li><i>toggle()</i>, which changes the target word. (i.e., if the current word it "Hat," then <i>toggle</i> makes it "Rabbit," and vice versa)</li>
+
+  <li><i>onStage()</i>, which returns a flag indicating if the target has flown off the visible screen area</li>
+</ul>
+<p>The first two methods are pretty straightforward, but the remaining methods, which are used to detect collisions, deserve a bit more attention. If you'll recall from the initial Codebox, collision detection is name for all the ways tou can determine it two things are intersecting on the screen. In the original wand example, we had a circular target, so we used a simple distance formula to determine if the wand's coordinates were inside the radius of the target. In this example, we're using a rectangular target. To make things a bit more complicated, the target changes size when the want touches it, so we need some supporting methods to make sure all the variables are in line with the current state of the target. The following diagram shows the various pieces that are in play:</p>
+<p><img src="http://blog.makezine.com/ano_target_size_090810.png" width="600" height="213" alt="ano_target_size_090810.png" /></p>
+<p>With this diagram, it's pretty easy to write the code for <i>detectCollision()</i>:</p>
+<pre>
+<code>
+  //Determines is a particular x,y coordinate is within the box
+  boolean detectCollision(float cx, float cy) {
+     boolean retVal = false;
+     if ( (cx &gt; x) &amp;&amp; (cx &lt; (x+w)) &amp;&amp; (cy &gt; (y-h)) &amp;&amp; (cy &lt; y)) {
+        retVal= true;
+     }
+     return retVal;
+  }
+</code>
+</pre>
+<p>Finally, the <i>onStage()</i> determines if the target is still inside the visible stage. Once it's flown out, it's recycled by putting it at some new spot with a new speed and direction. It's comforting to note that despite the added complexities, most of this code is almost identical to Example 5-17: The Bounds of a Rectangle in <a href="http://www.makershed.com/ProductDetails.asp?ProductCode=9781449379803">Getting Started with Processing</a>.</p>
+<p>
+<strong>Arraylist of targets</strong>
+</p>
+Now that we've gone through the Target class, let's take a look at how to use it. As mentioned at the outset, the main goal of this example was to show how you could manage multiple objects dynamically. While standard arrays (discussed in Chapter 10 of <a href="http://www.makershed.com/ProductDetails.asp?ProductCode=9781449379803">Getting Started with Processing</a>) are great for many things, they're not very dynamic because once you've specified how many elements they have, you're stuck with that forever.
+
+<p>For example, suppose you wanted to have a bunch of targets, but rather than recycling them like we've done here, you simply wanted to delete them. In a standard array, you can't delete elements. If you started with 5, you always have 5, no matter what. So, if you want to "delete" something, you have to have some sort of clumsy workaround. Or, on the flip side, suppose you had a program where you usually had a handful of items to manage, but on some occasions, you might have many thousands. Using a standard array, you'd have to create space for thousands every time, which wastes memory and can make your sketches slower.</p>
+<p>Processing's <i>ArrayList</i> is a way around these limitations. Rather than being a simple data type, like float or int, an ArrayList is a building block class for managing other objects. It has methods for adding new items, deleting existing one, finding how many items are in the list, and so forth. In addition to being a really useful tool, working with ArrayList will familiarize you with the techniques you'll use in other, more sophisticated classes, like HashMaps (something we'll explore in future posts). So, tab over to the magic_words.pde and let's look at the code.</p>
+<p>Creating an ArrayList is fairly simple, and is done in this line; note how we don't have to declare a size:</p>
+<pre>
+<code>
+ArrayList targets;  //an ArrayList is a  dynamic way to manage arrays
+</code>
+</pre>Once it's been declared, we can start adding some new objects into the ArrayList, which we do with the <i>add()</i> method. Here's the snippet of code in the <i>setup()</i> method that adds the initial targets:
+<pre>
+<code>
+  targets = new ArrayList();  // Create a new list 
+  for (int i=0; i &lt; N; i++) {
+    targets.add(new Target("Hat", "Rabbit"));
+  }
+</code>
+</pre>This snippet has a few interesting points. First, it demonstrates the syntax for calling a method, which is <i>object_variable</i>.<i>class method</i> (<i>argument list</i>). Second, it shows how you can use an object as an argument to ArrayList. Note how we use the <i>new</i> command in the argument list -- that will create a new Target object variable and pass it into the list. Finally, the snippet shows how we can do all this inside a loop. We could add 10, 100, or 10,000 objects -- the size of the list is completely dynamic.
+
+<p>This next snippet, which appears in the <i>draw()</i> method, shows how we can use the <i>get()</i> method to pull an item from the ArrayList:</p>
+<pre>
+<code>
+    for  (int i=0; i &lt; targets.size(); i++) {
+       Target t = (Target) targets.get(i); //Fetch the i'th target from the Array
+       t.paint();  // Paint it
+       //Check for collisions
+       if (t.detectCollision(wandX, wandY)) {
+          if (! t.inTarget) {
+             t.toggle();
+             t.inTarget = true;
+          }
+       } else {
+         t.inTarget = false;
+       }
+       t.step(); // Advance it on the screen
+       //If the current target has moved off the stage, delete it from the list and create a new target
+       if (!t.onStage()) {
+          targets.remove(i);
+          targets.add(new Target("Hat", "Rabbit"));
+       }     
+    }
+</code>
+</pre>
+The most important line here is the <code>Target t = (Target)targets.get(i);</code>.  Several things are happening here.  The first is that we're creating a new Target variable called <i>t</i>.  This time, though, we're not using the <i>new</i> command.  Why, you ask?  It's because the object we're tryng to access already exists -- it was created earlier in the <i>setup()</i> method. All we're doing here is retrieving it.  Second, we have this kind of weird syntax of <i>(Target)</i>.  This is the way that we tell Processing what type of variable it is that we're expecting to retrieve.  This is called "casting," and requires a bit more explanation.
+<p>
+<p>
+If you'll recall, ArrayList is a generic tool -- we could use it with a Target variable, the Jitterbug class discussed in Chapter 10 of <a href="http://www.makershed.com/ProductDetails.asp?ProductCode=9781449379803">Getting Started with Processing</a>, or any other class variable we might create in the future.  However, Processing (and Java, the underlying language it's based on) can't deal with generic object.  It requires that we give every variable an exact type when we declare it.  Adding <i>(Target)</i> to the front of the <i>get()</i> command is what does this -- we're telling Processing "Hey, we're pulling off a 'Target' object."  You'll see this referred to as <i>casting</i> in other programming resources.
+<p><p>
+Finally, we have the <i>targets.get(i)</i> part of the line.  This is just saying "pull the <i>i</i>'th item from the targets ArrayList.  
+<p><p>
+Once we've actually retrieved the variable <i>t</i>, we can call read it's variables, call its methods, and generally make it do our bidding.  In this example, we first call the <i>paint()</i> method to draw the target on the screen.  Next, we check to see if the wand is touching it (as you'll recall from the <a href="http://blog.makezine.com/archive/2010/09/codebox_create_a_magic_wand_1.html">last Codebox</a>, the wand's position is represented by the variables <i>wandX</i> and <i>wandY</i>).  If there is a collision, we first check to see if the wand was <i>already</i> inside the target.  (In other words, the wand might have collided with the object on an earlier iteration of <i>setup()</i> and still be inside the target box.)  If it's not (i.e., it's hitting the target box for the first time), then we toggle the text and set the <i>inTarget</i> flag.  If the wand is already in the target, then we simply set the target flag to false, which prevents the target from alternating state on each iteration of <i>draw()</i>.  The next command, <i>t.step()</i>, simply increments the target's <i>x</i> and <i>y</i> positions.  Finally, the last <i>if</i> block checks to see if the target is no longer visible on the stage.  If it's not (i.e., it has wandered off the visible area of the screen), then the target is removed from the ArrayList using the <i>remove()</i> method; a new target is then added in at some random new place.
+<p><p>
+Whew!  That's a lot of abstract stuff, but it's worth understanding because you will use these techniques again and again. Whether you're using an ArrayList, a HashMap, or some other general data structure, understanding these basic steps -- creating a new object, storing it in a generic data structure, and retrieving it -- is essential in making more sophisticated programs.
+<p><p>
+In the next Codebox, we'll take a break from the Webcam and explore how to get more sophisticated input from users using a really cool library called <a href="http://www.sojamo.de/libraries/controlP5/">controlP5</a>.  Oh, and fractals.  We'll do those, too.

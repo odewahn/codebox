@@ -1,0 +1,106 @@
+The Snowflake curve (or the [url="http://en.wikipedia.org/wiki/Koch_snowflake"]Koch snowflake[/url], if you want to be more formal) was one of the first [url="http://en.wikipedia.org/wiki/Fractal"]fractals[/url] described formally. Discovered in 1904 by Helge von Koch way before Benoit Mandelbrot coined the term "fractal," the snowflake was described as a "monster" because while it has a fixed area, it has an infinite perimeter. (Whoa!) This Answer shows you how to create this famous curve in Processing. The output will look something like this:
+
+[media][url="http://www.youtube.com/watch?v=bAhvSLvSJHY"]http://www.youtube.c...h?v=bAhvSLvSJHY[/url][/media]
+
+First things first, though -- exactly what is the Koch curve, and how do you create it? The base case is a simple triangle. Each edge is then replaced by a new set of 4 line segments that are 1/3 the length of the original line. You then repeatedly relace each of these new segments with a new 4-line segment (this recursive step). The following figure should give you the basic idea of the process:
+
+[attachment=851:snowflake.png]
+
+The following sketch will approximate the snowflake curve. You'll need to have the [url="http://answers.oreilly.com/topic/1305-extend-processing-with-contributed-libraries/"]controlP5 contributed libary[/url]; this will allow you to change the recursive depth to see how it affects the image. Unfortunately, I had to limit the maximum recursive depth to 6, rather than infinity, since the library does not currently support slidebars that extend beyond your monitor screen and into the far reaches of the known universe.
+
+[code]
+import controlP5.*; 
+
+ControlP5 controlP5;
+
+int depthSlider = 0; //controls the reciursive depth
+int MIN_DEPTH = 0;
+int MAX_DEPTH = 6;
+
+
+// Implements a Vector
+class Vector {
+ float x,y,r, theta;
+ 
+ Vector (float _x, float _y, float _r, float _theta) {
+ x = _x; //Origin x
+ y = _y; //Origin y
+ r = _r; //Length
+ theta = _theta; // Angle
+ }
+ 
+ float getEndX() { 
+ return x + r*cos(theta/57.3);
+ }
+ 
+ float getEndY() {
+ return y + r*sin(theta/57.3);
+ }
+ 
+ void drawVector() {
+ line(x,y,getEndX(),getEndY()); //Draw the current vector
+ }
+ 
+}
+
+//Recursive function that creates a fractal 
+void fractal(Vector v, int N) {
+ if (N == 0) {
+ v.drawVector(); //Draw the current vector
+ } else {
+ Vector t1 = new Vector(v.x,v.y,v.r/3.0,v.theta);
+ Vector t2 = new Vector(t1.getEndX(), t1.getEndY(), v.r/3.0, v.theta + 60.0);
+ Vector t3 = new Vector(t2.getEndX(), t2.getEndY(), v.r/3.0,v.theta - 60.0);
+ Vector t4 = new Vector(t3.getEndX(), t3.getEndY(), v.r/3.0,v.theta);
+ fractal(t1,N-1); //Recurse
+ fractal(t2,N-1); //Recurse
+ fractal(t3,N-1); //Recurse
+ fractal(t4,N-1); //Recurse
+ }
+}
+
+//This method is called when one of the controlP5 controls is activated.
+//Note that the Id in the switch statement must match the Id when the control is created
+public void controlEvent(ControlEvent theEvent) {
+ switch(theEvent.controller().id()) {
+ case(1):
+ //The depth slider was changed
+ keyPressed();
+ break;
+ }
+}
+ 
+
+// keep draw() here to continue looping while waiting for keys
+void draw() {
+}
+
+//Draw a new image each time a key is pressed
+void keyPressed() { 
+ fill(#556b2f);
+ stroke(#fffff0);
+ smooth();
+ rect(0,0,400,400);
+ Vector seed = new Vector(200,40,300,120);
+ fractal (seed,depthSlider);
+ seed = new Vector(350,300,300,-120);
+ fractal (seed,depthSlider);
+ seed = new Vector(50,300,300,0);
+ fractal (seed,depthSlider);
+ 
+}
+
+//Draw the first image
+void setup() {
+ size(400,400);
+ controlP5 = new ControlP5(this);
+ controlP5.addSlider("depthSlider",MIN_DEPTH,MAX_DEPTH,depthSlider,20,20,100,10).setId(1);
+ Slider s2 = (Slider)controlP5.controller("depthSlider"); //Get a handle to the new slider
+ s2.setNumberOfTickMarks(MAX_DEPTH); // Set tick marks
+ s2.setLabel("Recursive Depth");
+ keyPressed();
+}
+
+[/code]
+
+[bookisbn]9781449379803[/bookisbn]

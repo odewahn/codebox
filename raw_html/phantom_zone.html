@@ -1,0 +1,67 @@
+In the 1980s movie [url="http://www.imdb.com/title/tt0081573/"]Superman II[/url], the evil General Zod and his companions are trapped in the Phantom Zone, a prison that looked like a pane of glass. Once the villains are sucked inside, they're doomed to forever tumble through space. (Well, not forever, because you know they're going to get out somehow, or there wouldn't be a movie). It looks cheesy now, but man, it seemed pretty mind blowing in 1980. This Answer shows you how to create your own Phantom Zone using [url="http://www.processing.org"]Processing[/url]. It will look something like this:
+
+[media][url="http://www.youtube.com/watch?v=UR8PmgLFCJ4"]http://www.youtube.c...h?v=UR8PmgLFCJ4[/url][/media]
+
+Here's the code, which follows the [url="http://processing.org/learning/3d/texture1.html"]Texture 1[/url] example code on the Processing site fairly closely. A texture is a mapping between an image and a surface (in this case, a square) that is defined by a series of [url="http://processing.org/reference/vertex_.html"]vertices[/url]. To create the Phantom Zone, I've replaced the static texture map from the sample with the output from the web cam -- this gives the animated effect. The tumbling and sense of movement are provided by rotating the shape around the X, Y, and Z axes. (A bit of simple math is required to make the image rotate about its center point; these transformations are also done in the sample code, but I've tried to make them more explicit here to show what they do.) I also added a space background to enhance the sense of forlornness.
+
+Enjoy!
+
+
+[code]
+import processing.opengl.*;
+import processing.video.*;
+
+
+PImage bg = loadImage("http://data.oreilly.com/~aodewahn/galaxy_640.jpg");
+int WIDTH = bg.width;
+int HEIGHT = bg.height;
+
+
+Capture cam; //Set up the camera
+PImage camCapture;
+
+int imgH, imgW;
+int spaceZ = 0;
+
+//Position of the image
+int imgX = WIDTH/2;
+int imgY = HEIGHT/2;
+
+
+void setup() {
+ size(WIDTH, HEIGHT, P3D);
+ cam = new Capture(this, WIDTH, HEIGHT);
+ noStroke();
+}
+
+void draw() {
+ if (cam.available() == true) {
+ cam.read();
+ }
+ 
+ //Move the z-coordinate through space 
+ spaceZ += 1;
+ if (spaceZ > WIDTH) {
+ spaceZ = 0;
+ }
+ 
+ // 
+ background(bg); // Draw a space-y looking background
+ // Superimpose the image from the webcam
+ scale (.55); //Scale the image to fit inside the drawing area
+ translate(imgX+spaceZ, imgY+spaceZ); //Move the origin along a 45 degee line
+ rotateY(spaceZ/57.3);
+ rotateX(spaceZ/57.3);
+ rotateZ(spaceZ/57.3);
+ beginShape();
+ texture(cam);
+ int cW = cam.width;
+ int cH = cam.height;
+ vertex(-cW/2, -cH/2, 0, 0, 0);
+ vertex(cW/2, -cH/2, 0, cW, 0);
+ vertex(cW/2, cH/2, 0, cW, cH);
+ vertex(-cW/2, cH/2, 0, 0, cH);
+ endShape();
+}
+[/code]
+[bookisbn]9781449379803[/bookisbn]

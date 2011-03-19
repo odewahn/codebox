@@ -1,0 +1,86 @@
+"Fractal" is the broad name for a whole class of [url="http://answers.oreilly.com/topic/1250-create-recursive-art-with-processing/"]recursively defined[/url] mathematical objects that range from psychedelic [url="http://bit.ly/bl3nW8"]Mandelbrot Sets[/url] to ornate [url="http://bit.ly/bki9oA"]Koch Snowflakes[/url]. Despite their geometric complexity and intimidating-sounding math, fractals are surprisingly simple, and are almost always based on a few easy rules. This Answer shows you a quick [url="http://answers.oreilly.com/topic/1202-how-to-get-started-with-processing/page__hl__processing__fromsearch__1"]Processing[/url] script that generates a fractal-like plant that looks something like this:
+
+[attachment=746:fractal1.png]
+
+Each "plant" begins as a straight line. This line is replaced with a new "branch" that consists of the original line plus 3-4 new alternating branches. (The exact number of branches is determined by a variable you can set). This same process is applied recursively for each new branch, up to a depth you specify. The following figure illustrates the basic idea:
+
+[attachment=748:fractal.png]
+
+Lines are represented as vectors. A vector consists of an origin point defined by the variables x and y, a length defined by the variable r, and an angle defined by the variable theta. The following figure shows how these variables are related: 
+
+[attachment=749:vector.png]
+
+Here's the code:
+
+[code]
+int BRANCHES = 4; //Number of branches per line
+int DEPTH = 5; // Recursive depth
+float MIN_ANGLE = 10.0; //Minimum angle for new branch
+float MAX_ANGLE = 15.0; //Maximum angle for new branch
+float MIN_LENGTH = 0.30; //Minimum length of new branch, as a pct of current length
+float MAX_LENGTH = 0.8; //Maximum length of new branch, as a pct of current length
+
+// Implements a Vector
+class Vector {
+ int x,y;
+ float r, theta;
+ 
+ Vector (int _x, int _y, float _r, float _theta) {
+ x = _x; //Origin x
+ y = _y; //Origin y
+ r = _r; //Length
+ theta = _theta; // Angle
+ }
+ 
+ int getEndPointX() { 
+ return int(x + r*cos(theta/57.3));
+ }
+ 
+ int getEndPointY() {
+ return int(y + r*sin(theta/57.3));
+ }
+ 
+}
+
+//Recursive function that creates a fractal "plant" 
+void fractal(Vector v, int N) {
+ if (N > 0) {
+ int dir = 1; //control alternating direction of the branch
+ line(v.x,v.y,v.getEndPointX(),v.getEndPointY()); //Draw the current vector
+ for (int i = 0; i < BRANCHES; i++) { 
+ //Create a random vector based on the current one
+ Vector r = new Vector (v.x, v.y,v.r,v.theta); //New random vector that will branch off the current line
+ r.r = random(v.r*MIN_LENGTH, v.r*MAX_LENGTH); //Select a random length
+ r.x = r.getEndPointX(); //shift the x-origin
+ r.y = r.getEndPointY(); //shift the y-origin
+ r.theta += dir*random(MIN_ANGLE,MAX_ANGLE); // shift the angle a bit
+ dir = dir * -1; //Alternate branch direction
+ fractal(r,N-1); //Recurse
+ }
+ }
+}
+ 
+
+// keep draw() here to continue looping while waiting for keys
+void draw() {
+}
+
+//Draw a new image each time a key is pressed
+void keyPressed() { 
+ fill(#556b2f);
+ stroke(#fffff0);
+ smooth();
+ rect(0,0,400,400);
+ Vector seed = new Vector(10,10,200,45);
+ fractal (seed,DEPTH );
+}
+
+//Draw the first image
+void setup() {
+ size(400,400);
+ keyPressed();
+}
+
+[/code]
+
+[bookisbn]9781449379803[/bookisbn]

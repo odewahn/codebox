@@ -1,0 +1,133 @@
+
+A <a href="http://en.wikipedia.org/wiki/Fractal">fractal</a>, according to Wikipedia, is a "a rough or fragmented geometric shape that can be split into parts, each of which is (at least approximately) a reduced-size copy of the whole."  One of the cool things about fractals is that they use really simple processes to create really complex, natural looking objects, like plants, clouds, flames, and so forth.  This Codebox will show you how to create a fractal menagerie for viewing a few different styles of fractals, like this:
+<p>
+<iframe src="http://player.vimeo.com/video/15458279" width="600" height="480" frameborder="0"></iframe>
+<p>
+Along the way, we'll continue to expand on the OOP concepts introduced in Chapter 9 of <a href="http://www.makershed.com/ProductDetails.asp?ProductCode=9781449379803&Click=37845">Getting Started with Processing</a>, as well as show how to use the great <a href="http://www.sojamo.de/libraries/controlP5/">controlP5</a> library to create familiar GUI controls used in other languages.
+<p>
+
+<p><strong>IFS Fractals</strong></p>
+<p>
+The <a href="http://en.wikipedia.org/wiki/Iterated_function_system">Iterated Function System</a>, or IFS, is one of the simplest techniques for creating natural-looking fractals.  The IFS consists of a handful of transformations (more on these in a second) that describe how to change one point into another.  The <a href="http://en.wikipedia.org/wiki/Barnsley_fern">Barnsley Fern</a>, which looks like a Black Spleenwort (a kind of fern), is the classic example of an IFS fractal, but there are many different varieties.  Larry Riddle has a nice breakdown of others on his <a href="http://ecademy.agnesscott.edu/~lriddle/ifs/ifs.htm">IFS systems</a> page.
+<p>
+The technique works like this.  Starting from a single point, usually (0,0), you randomly apply one of the transformations that make up the IFS system.  Then, once you have the new, transformed point, you plot it on the screen, which in Processing we do with the <i>set()</i> command.  Then, you repeat the process again starting from the point you just computed. 
+<p>
+After a few hundred iterations, you'll begin to see a ghostly outline of a fern.  After a 100,000 iterations, you'll see a detailed image that looks almost exactly like a natural object.  The following image shows the IFS system for the Barnsley fern, as well as the image that results when you apply the process over and over.
+<p>
+<img src="http://blog.makezine.com/controlp5_barnsley_092810.png" width="600" height="199" alt="controlp5_barnsley_092810.png" />
+<p>
+Let's unpack the details a bit more.  A transformation is a formula that...well, transforms one point into another point.  Just like the translate, rotate, and scale transformations described on page 104 of <a href="http://www.makershed.com/ProductDetails.asp?ProductCode=9781449379803&Click=37845">Getting Started with Processing</a>, the transformations in the IFS system map a point to a new location by applying a <a href="http://en.wikipedia.org/wiki/Transformation_matrix">transformation matrix</a>, which is a shorthand way of representing a set of formulas.
+<p>
+The table that defines the IFS system provides the values used in the matrices.  Columns a,b,d,d,e, and f represent the various elements in a matrix. (I'll talk about column p in a second.)  The next figure shows how to translate a row in an IFS system into a matrix:
+<p>
+
+<img src="http://blog.makezine.com/controlp5_transform_matrix_100110.png" width="600" height="145" alt="controlp5_transform_matrix_100110.png" />
+<p>
+As an example, here's the 3rd transformation matrix for the Barnsley Fern that was shown earlier:
+<p>
+<img src="http://blog.makezine.com/controlp5_transform_example_100110.png" width="600" height="97" alt="controlp5_transform_example_100110.png" />
+<p>
+The final column in the IFS matrix, p, represents the frequency with which the transformation is selected.  So, for the Barnsley fern, transformation f1 is selected 1% of the time, f2 is selected 85% of the time, and f3 and f4 are each selected 7% of the time.  If this is a bit confusing, think of as though you filled up a bag with 100 marbles, each labelled each with one of these functions.  You'd have 1 marble for f4, 85 for f2, 7 for f3, and 7 for f4.  At each iteration, you'd randomly grab a marble from the bag, look at it's label, apply the corresponding transformation, and then drop the marble backinto the bag.  
+<p>
+<p>
+<p><strong>controlP5</strong></p>
+Now that you understand the basic idea of the IFS fractals, let's take a quick look at <a href="http://www.sojamo.de/libraries/controlP5/">controlP5</a>, a code library by <a href="http://www.sojamo.de/">Andreas Schlegel</a> for creating familiar user input controls, like these:
+</p>
+<p>
+<img src="http://blog.makezine.com/controlp5_controls_092210.png" width="600" height="447" alt="controlp5_controls_092210.png" />
+<p>
+We're going to use the "knob" control to allow the user to set the number of iterations used to create the drawing, and the "radio" control to select which IFS system to display.  
+<p>
+Before we can use the library in our sketch, we have to get it installed.  The first step is to make sure you have a directory called "libraries" in your Sketchbook directory. You can find the Sketchbook directory by opening the Processing's Preferences window. You'll see the directory name at the top:
+<p>
+
+
+<img src="http://blog.makezine.com/controlp5_find_library_092810.png" width="600" height="364" alt="controlp5_find_library_092810.png" />
+<p>
+After you've located the main directory, use a tool like Window's Explorer, Mac's finder, or UNIX's trusty terminal to see if there is a subdirectory called "libraries." If so, you're all set. If not, then create the subdirectory (be sure to name it "libraries").
+<p>
+Next, you're ready to install controlP5.  Go to the <a href="http://www.sojamo.de/libraries/controlP5/">controlP5 main page</a> and click the link to download the latest version of the library.  (You'll find the link in the green box at the top, center of the screen.)  Once you've downloaded the file, uncompress it and copy the files into your "libraries" subdirectory. Restart Processing, and you should see the library appear under the "Sketch -> Import Library" menu item. <p>
+
+<img src="http://blog.makezine.com/controlp5_install_092810.png" width="600" height="373" alt="controlp5_install_092810.png" />
+
+<p>
+<p>
+After the library is installed, restart Processing.  Now we're ready to talk a little bit about what the fractal side of the project.
+<p>
+<strong>Set up the sketch</strong>
+<p>
+Whew!  That was a lot of overview material, but now that controlP5 is installed we're ready to use Processing to implement the IFS system described earlier.
+Start Processing, and then paste the following code into the text editor.  (As always, you can either highlight all the code in the following box and then hit ctrl_c, or you can click on this link to <a href="http://makezine.googlecode.com/svn/trunk/processing/controlp5/controlp5_fractals.pde">controlp5_fractals.pde</a> and then use the ctrl+a, ctrl+c combination.)  Here's the codebox:
+<p>
+<object data="http://makezine.googlecode.com/svn/trunk/processing/controlp5/controlp5_fractals.pde" type="text/plain" width="600" style="height: 480px; background-color: #cccccc"></object>
+</p>
+<p>
+There's one thing you'll probably notice as you go through the example: it contains multiple class definitions at the end of the file.  In the last Codebox, <a href="http://blog.makezine.com/archive/2010/09/codebox_swat_an_arraylist_of_target.html">Swat and (arraylist) of targets</a>, we put all the classes into separate tabs.  But, this isn't required -- it's totally fine to lump them all into a single file, like I've done here.  If you want to split them out into separate tabs, just be sure to name the file the same as the class.
+<p>
+Fire up the code and you should see something very similar to the video at the beginning of this post.  You can click the radio buttons to select one from among a variety of different IFS fractals, and can also use the knob controller to set the number of iterations.
+<p>
+<strong>Discussion</strong></p>
+<p>
+The code defines three classes that serve as the building block for the project:
+<p>
+<li>
+<b>The Transform class</b>.  This class performs all math involved in the transformation matrix.  Most of the code is devoted to simply storing all the variables.  The <i>evalX()</i> and <i>evalY()</i> return the new X and Y coordinates for the point you pass in.
+</li>
+<li>
+<b>The IFS class</b>.  This class implements the IFS data structures.  It consists of an ArrayList of Transform classes called <i>tranforms</i>, an ArrayList to represent the frequency distribution of those transforms called <i>histogram</i> (extending our earlier analogy, this is the bag of marbles we'll use to select the random transform from), and a description.  The key methods are: are <i>addTransform()</i>, which adds a new Transform to the <i>transform</i> list; <i>addHistogram()</i>, which adds a new "marble" to the <i>histogram</i> frequency distribution based on the Transform's <i>p</i> value; and <i>selectRandomTransform()</i>, which is used to select one of the transforms at random based on the frequency distribution specified in the <i>histogram</i> ArrayList.
+</li>
+<li>
+<b>The Point class</b>.  Holds the x and y coordinate for the points in the fractal.
+</li>
+<p>
+We use these classes in a variety of ways in the main program.  First, in what's probably the most conspicuous portion of the code, we use IFS and Transform to define the various fractals we want to display.  For example, here's the code to create the Barnsley Fern:
+
+<pre>
+<code>
+   c = new IFS("Classic Barnsley Fern");
+   c.addTransform( new Transform( 0.0,   0.0,   0.0,  0.16, 0.0, 0.0,  0.01));
+   c.addTransform( new Transform( 0.85,  0.04, -0.04, 0.85, 0.0, 1.6,  0.85));
+   c.addTransform( new Transform( 0.2,  -0.26,  0.23, 0.22, 0.0, 1.6,  0.07));
+   c.addTransform( new Transform(-0.15,  0.28,  0.26, 0.24, 0.0, 0.44, 0.07));
+   patterns.add(c);
+</code>
+</pre>
+<p>
+And, here's the code to define the <a href="http://ecademy.agnesscott.edu/~lriddle/ifs/heighway/heighway.htm">Dragon curve</a>: 
+<p>
+<pre>
+<code>
+   c = new IFS ("Dragon");
+   c.addTransform( new Transform(0.5, -0.5, 0.5, 0.5, 0.0,0.0,.50));
+   c.addTransform( new Transform(-0.5,-0.5,0.5,-0.5,1.0,0.0, 0.50)); 
+   patterns.add(c);
+</pre>
+</code>
+<p>
+Next, we set up controlP5 knob and radio button.  This requires 2 parts steps.  The first occurs in the <i>setup()</i> method, where the two controls are added to the sketch.  Adding the knob is fairly straightforward, and requires only one line:
+<p>
+<pre>
+<code>
+   iterationKnob = controlP5.addKnob("iterationKnob", N_MIN, N_MAX, N, 10,10,50);   
+</code>
+</pre>
+<p>
+The radio button requires just a bit more code because in addition to adding the control itself, we also have to add the items that can be selected.  This is done by looping through the ArrayList of IFS patterns and then using <i>description</i> field as the selection item in the radio button.  Here's the code:
+<p>
+<pre>
+<code>
+   ifsRadio = controlP5.addRadio("ifsSelect",70,10);
+   for (int i=0; i < patterns.size(); i++) {
+     IFS p = (IFS) patterns.get(i);
+     ifsRadio.add(p.description, i);
+   } 
+</code>
+</pre>
+<p>
+The second part of using the controlP5 library is to set up <i>action methods</i> that are triggered when the user interacts with the control.  The key is to give the method the same name as the *description* you used when you added the control, not the name of the control's instance variable.  For example, when we added the <i>ifsRadio</i> control, we used <i>ifsSelect</i> as the description.  This means that we will need a corresponding method called <i>ifsSelect()</i> to receive any clicks users make on the control.  This method must also have a parameter that will hold the current value of the control.  
+<p>
+So, for the <i>ifsSelect()</i> method, we have a parameter that will tell us the index of the list item that was just selected.  We'll then use that index to retrieve the correct IFS pattern and make it the current one being displayed.  The following diagram summarizes all the elements in play.  (The controlP5 controls all work slightly differently, but the site has great <a href="http://www.sojamo.de/libraries/controlP5/index.html#examples">examples</a> of how to use them all.):
+<p>
+<img src="http://blog.makezine.com/controlp5_action_100410.png" width="600" height="224" alt="controlp5_action_100410.png" />
+<p>
+The final piece of the puzzle is the <i>makeIFS()</i> method, which makes the actual calculations required to create the fractal.  Because IFS systems are so elegant, there really isn't very much to say.  We simply loop through the number of iterations specified in the variable <i>N</i>  (whose value has been set by the <i>iterationKnob()</i> method), pull out a transform from the current IFS system (whose value has been set in the <i>ifsSelect()</i> method), and then add each point into the array of Point objects.  We also keep track of the ranges of the X and Y values so that we can scale the image to fill up the drawing area.

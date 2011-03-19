@@ -1,0 +1,66 @@
+Color filters allow you to alter an image by ... well ... filtering out different colors.  While Processing has some filters built-in, it's often handy to be able to create your own custom filters.  For example, this page on [url="http://3dtv.at/Knowhow/AnaglyphComparison_en.aspx"]Anaglyph Methods Comparison[/url] details a number of different filters that are handy in creating [url="http://answers.oreilly.com/topic/1463-create-3d-photographs-with-processing/"]stereoscopic images[/url].  This Answer shows you how to create your own filters like these.
+
+[attachment=1068:filter_examples.png]
+
+Filters are expressed as [url="http://answers.oreilly.com/topic/1522-multiply-matrices-in-processing/"]matrix multiplication[/url] operations that are applied to the red, green, and blue components of the pixels in the original image.  So, basically, to create a filter, we need to pull each pixel in the original image, apply the matrix operation to its color components, and then use this new value in the corresponding pixel in the new image.  Pretty straightforward.
+
+The only wrinkle is that images in Processing are held in one dimensional arrays of colors, rather than 2 dimentional arrays of (x,y) corrdinates, as explained in this great [url="http://processing.org/learning/pixels/"]Images and Pixels[/url] tutorial by Daniel Shiffman.  In the tutorial, he gives a nice formula that you can use to map an (x,y) coordinate to the position in the image array:
+
+position in array = x + IMAGE_WIDTH * y
+
+The following figure should help illustrate most of the concepts at work here:
+
+[attachment=1069:pixel_array.png]
+
+Without further ado, here's the code to implement the filter:
+
+[code]
+PImage pic = loadImage("/Users/odewahn/Desktop/hydrant_r.png");
+
+
+// Create filter here
+float mat[][] = {
+  {0.0, 0.0, 0.0},
+  {0.0,1.0,0.0},
+  {0.0, 0.0, 1.0} 
+};
+
+//Applies the passed filter to the image and returns a new image
+PImage filter(PImage img, float[][] filter) {
+  int loc;
+  PImage retVal = createImage(img.width, img.height, RGB);
+  img.loadPixels();  //Required to read and write the pixels
+  retVal.loadPixels();  // Required to read and write pixels
+  //Process the pixels in img, apply filter, and then create a new pixel in retVal
+  for (int x = 0; x < img.width; x++) {
+    for (int y = 0; y < img.height; y++) {
+      loc = x + y*img.width; //Convert the (x,y) coordinate into a position in the array
+      //Pull out RGB for the left image
+      float[] pix = new float[3];  // Create a 3x1  matrix of pixels
+      pix[0] = red(img.pixels[loc]);
+      pix[1] = green(img.pixels[loc]);
+      pix[2] = blue(img.pixels[loc]);
+      //Compute new pixel color in the merged image
+      float res[] = { 0.0, 0.0, 0.0 } ;  //Define the 3x1 matrix for the output
+      //Perform the matrix multiplication
+      for (int i=0;  i < filter[0].length; i++) {
+        for (int j=0; j < pix.length; j++) {
+           res[j] += filter[i][j] * pix[j];
+        }
+      }
+      //Now set new color
+      retVal.pixels[loc] = color(res[0],res[1],res[2]);
+    }
+  }
+  return retVal;
+}
+
+void setup() {
+  size(pic.width, pic.height);
+}
+
+
+void draw() {
+  image(filter(pic, mat),0,0);
+}
+[/code]
