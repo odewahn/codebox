@@ -1,0 +1,676 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.3" />
+<title></title>
+<style type="text/css">
+/* Sans-serif font. */
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+div#toctitle,
+span#author, span#revnumber, span#revdate, span#revremark,
+div#footer {
+  font-family: Arial,Helvetica,sans-serif;
+}
+
+/* Serif font. */
+div.sectionbody {
+  font-family: Georgia,"Times New Roman",Times,serif;
+}
+
+/* Monospace font. */
+tt {
+  font-size: inherit;
+}
+
+body {
+  margin: 1em 5% 1em 5%;
+}
+
+a {
+  color: blue;
+  text-decoration: underline;
+}
+a:visited {
+  color: fuchsia;
+}
+
+em {
+  font-style: italic;
+  color: navy;
+}
+
+strong {
+  font-weight: bold;
+  color: #083194;
+}
+
+tt {
+  font-size: inherit;
+  color: navy;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #527bbd;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h1, h2, h3 {
+  border-bottom: 2px solid silver;
+}
+h2 {
+  padding-top: 0.5em;
+}
+h3 {
+  float: left;
+}
+h3 + * {
+  clear: left;
+}
+
+div.sectionbody {
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid silver;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+ul > li     { color: #aaa; }
+ul > li > * { color: black; }
+
+pre {
+  padding: 0;
+  margin: 0;
+}
+
+span#author {
+  color: #527bbd;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+span#email {
+}
+span#revnumber, span#revdate, span#revremark {
+}
+
+div#footer {
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+div#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+div#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+div#preamble {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.tableblock, div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.admonitionblock {
+  margin-top: 2.0em;
+  margin-bottom: 2.0em;
+  margin-right: 10%;
+  color: #606060;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #527bbd;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid #dddddd;
+  border-left: 4px solid #f0f0f0;
+  padding: 0.5em;
+}
+
+div.listingblock > div.content {
+  border: 1px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
+  background: #f8f8f8;
+  padding: 0.5em;
+}
+
+div.quoteblock, div.verseblock {
+  padding-left: 1.0em;
+  margin-left: 1.0em;
+  margin-right: 10%;
+  border-left: 5px solid #f0f0f0;
+  color: #777777;
+}
+
+div.quoteblock > div.attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock > pre.content {
+  font-family: inherit;
+  font-size: inherit;
+}
+div.verseblock > div.attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #527bbd;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 3px solid #dddddd;
+}
+
+div.exampleblock > div.content {
+  border-left: 3px solid #dddddd;
+  padding-left: 0.5em;
+}
+
+div.imageblock div.content { padding-left: 0; }
+span.image img { border-style: none; }
+a.image:visited { color: white; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+  color: navy;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+ol.arabic {
+  list-style-type: decimal;
+}
+ol.loweralpha {
+  list-style-type: lower-alpha;
+}
+ol.upperalpha {
+  list-style-type: upper-alpha;
+}
+ol.lowerroman {
+  list-style-type: lower-roman;
+}
+ol.upperroman {
+  list-style-type: upper-roman;
+}
+
+div.compact ul, div.compact ol,
+div.compact p, div.compact p,
+div.compact div, div.compact div {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead, p.table.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+tfoot {
+  font-weight: bold;
+}
+td > div.verse {
+  white-space: pre;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overriden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+
+div.hdlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hdlist tr {
+  padding-bottom: 15px;
+}
+dt.hdlist1.strong, td.hdlist1.strong {
+  font-weight: bold;
+}
+td.hdlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+  color: navy;
+}
+td.hdlist2 {
+  vertical-align: top;
+}
+div.hdlist.compact tr {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.comment {
+  background: yellow;
+}
+
+.footnote, .footnoteref {
+  font-size: 0.8em;
+}
+
+span.footnote, span.footnoteref {
+  vertical-align: super;
+}
+
+#footnotes {
+  margin: 20px 0 20px 0;
+  padding: 7px 0 0 0;
+}
+
+#footnotes div.footnote {
+  margin: 0 0 5px 0;
+}
+
+#footnotes hr {
+  border: none;
+  border-top: 1px solid silver;
+  height: 1px;
+  text-align: left;
+  margin-left: 0;
+  width: 20%;
+  min-width: 100px;
+}
+
+div.colist td {
+  padding-right: 0.5em;
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+div.colist td img {
+  margin-top: 0.3em;
+}
+
+@media print {
+  div#footer-badges { display: none; }
+}
+
+div#toc {
+  margin-bottom: 2.5em;
+}
+
+div#toctitle {
+  color: #527bbd;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.toclevel2 {
+  margin-left: 2em;
+  font-size: 0.9em;
+}
+div.toclevel3 {
+  margin-left: 4em;
+  font-size: 0.9em;
+}
+div.toclevel4 {
+  margin-left: 6em;
+  font-size: 0.9em;
+}
+
+</style>
+<script type="text/javascript">
+/*<![CDATA[*/
+window.onload = function(){asciidoc.footnotes();}
+var asciidoc = {  // Namespace.
+
+/////////////////////////////////////////////////////////////////////
+// Table Of Contents generator
+/////////////////////////////////////////////////////////////////////
+
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+
+// toclevels = 1..4.
+toc: function (toclevels) {
+
+  function getText(el) {
+    var text = "";
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+        text += i.data;
+      else if (i.firstChild != null)
+        text += getText(i);
+    }
+    return text;
+  }
+
+  function TocEntry(el, text, toclevel) {
+    this.element = el;
+    this.text = text;
+    this.toclevel = toclevel;
+  }
+
+  function tocEntries(el, toclevels) {
+    var result = new Array;
+    var re = new RegExp('[hH]([2-'+(toclevels+1)+'])');
+    // Function that scans the DOM tree for header elements (the DOM2
+    // nodeIterator API would be a better technique but not supported by all
+    // browsers).
+    var iterate = function (el) {
+      for (var i = el.firstChild; i != null; i = i.nextSibling) {
+        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+          var mo = re.exec(i.tagName);
+          if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
+            result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+          }
+          iterate(i);
+        }
+      }
+    }
+    iterate(el);
+    return result;
+  }
+
+  var toc = document.getElementById("toc");
+  var entries = tocEntries(document.getElementById("content"), toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "_toc_" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+  if (entries.length == 0)
+    toc.parentNode.removeChild(toc);
+},
+
+
+/////////////////////////////////////////////////////////////////////
+// Footnotes generator
+/////////////////////////////////////////////////////////////////////
+
+/* Based on footnote generation code from:
+ * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
+ */
+
+footnotes: function () {
+  var cont = document.getElementById("content");
+  var noteholder = document.getElementById("footnotes");
+  var spans = cont.getElementsByTagName("span");
+  var refs = {};
+  var n = 0;
+  for (i=0; i<spans.length; i++) {
+    if (spans[i].className == "footnote") {
+      n++;
+      // Use [\s\S] in place of . so multi-line matches work.
+      // Because JavaScript has no s (dotall) regex flag.
+      note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+      noteholder.innerHTML +=
+        "<div class='footnote' id='_footnote_" + n + "'>" +
+        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
+        n + "</a>. " + note + "</div>";
+      spans[i].innerHTML =
+        "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
+        "' title='View footnote' class='footnote'>" + n + "</a>]";
+      var id =spans[i].getAttribute("id");
+      if (id != null) refs["#"+id] = n;
+    }
+  }
+  if (n == 0)
+    noteholder.parentNode.removeChild(noteholder);
+  else {
+    // Process footnoterefs.
+    for (i=0; i<spans.length; i++) {
+      if (spans[i].className == "footnoteref") {
+        var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
+        href = href.match(/#.*/)[0];  // Because IE return full URL.
+        n = refs[href];
+        spans[i].innerHTML =
+          "[<a href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+      }
+    }
+  }
+}
+
+}
+/*]]>*/
+</script>
+</head>
+<body class="article">
+<div id="header">
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_color_filters">Color Filters</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Color filters allow you to alter an image by &#8230; well &#8230; filtering out different colors.  While Processing has some filters built-in, it&#8217;s often handy to be able to create your own custom filters.  For example, this page onhttp://3dtv.at/Knowhow/AnaglyphComparison_en.aspx [Anaglyph Methods Comparison], details a number of different filters that are handy in creating <a href="http://answers.oreilly.com/topic/1463-create-3d-photographs-with-processing">http://answers.oreilly.com/topic/1463-create-3d-photographs-with-processing</a> [stereoscopic images].  This codebox shows you how to create your own filters like these.</p></div>
+<div class="imageblock" id="filter-example">
+<div class="content">
+<img src="figs/filter_example.png" alt="figs/filter_example.png" />
+</div>
+<div class="title">Figure 1. Filters are created through matrix operations</div>
+</div>
+<div class="paragraph"><p>Filters are expressed as <a href="http://answers.oreilly.com/topic/1522-multiply-matrices-in-processing/">http://answers.oreilly.com/topic/1522-multiply-matrices-in-processing/</a> [matrix multiplication] operations that are applied to the red, green, and blue components of the pixels in the original image.  So, basically, to create a filter, we need to pull each pixel in the original image, apply the matrix operation to its color components, and then use this new value in the corresponding pixel in the new image.  Pretty straightforward.</p></div>
+<div class="sect2">
+<h3 id="_multiplying_matrices_in_processing">Multiplying Matrices in Processing</h3>
+<div class="paragraph"><p>First, a bit of review.  A <a href="http://simple.wikipedia.org/wiki/Matrix_(mathematics">http://simple.wikipedia.org/wiki/Matrix_(mathematics</a>) [matrix] is a 2 dimensional array of numbers called elements.  Matrices are used in many different applications, representing sets of equations, transformations to 3D objects, and color filters (as in this example).</p></div>
+<div class="paragraph"><p>A matrix is usually characterized by its dimensions: the number of elements in its rows (the numbers going across ) and columns (the numbers going up and down).  By convention, the number of rows always comes first. The following figure shows a 2 row by 3 matrix, which is generally just called a 2x3 matrix, and a 3x2 matrix:</p></div>
+<div class="imageblock" id="matrices-example">
+<div class="content">
+<img src="figs/matrices_example.png" alt="figs/matrices_example.png" />
+</div>
+<div class="title">Figure 2. Matrices</div>
+</div>
+<div class="paragraph"><p>To multiply two matrices together (lets call them A and B), the number of columns in A must equal the number of rows in B.  This is critical&#8201;&#8212;&#8201;if this isn&#8217;t true, then the multiplication is not defined.  (This is sort of like dividing by zero&#8201;&#8212;&#8201;it&#8217;s simply impossible.)</p></div>
+<div class="paragraph"><p>Assuming this criteria is met, the product of the two matrices (lets call it C) will have the same number of rows as A and the same number of columns as B. The elements in C are equal to the sum of the products of the corresponding column element in A times the row element in B.  This is a bit tricky, but the following figure should (hopefully!) make this a bit clearer:</p></div>
+<div class="imageblock" id="matrix-operations">
+<div class="content">
+<img src="figs/matrix_operations.png" alt="figs/matrix_operations.png" />
+</div>
+<div class="title">Figure 3. Matrix multiplication operation</div>
+</div>
+<div class="paragraph"><p>The following sketch illustrates how to do the operation:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>// Create a 2x3 matrix
+float[][] A = {
+  {1.0, 0.0, 0.0},
+  {1.0, 0.5, 1.0}
+};
+
+// Create a 3x2 matrix
+float[][] B = {
+  {2.0, 0.0 },
+  {1.0, 3.0},
+  {3.0, 0.5}
+};
+
+// Create a 2x2 matrix to hold the product
+float[][] C = new float[2][2];  //result matrix
+
+//This section performs the actual multiplication
+for (int i=0; i &lt; C.length; i++) { //Loop through each row in C
+   for (int j=0; j &lt; C[0].length; j++) {  //Loop through each col in C
+      for (int k=0; k &lt; B.length; k++) {
+         //The element C[i][j] is the sum of the products of the row in A * the col in C
+         C[i][j] += A[i][k] * B[k][j];  // that row in A * that col in B
+      }
+   }
+}
+
+//Print out the results
+for (int i=0; i &lt; C.length; i++) {
+  for (int j=0; j &lt; C[0].length; j++) {
+     println("[" + i + "][" + j + "] = " + C[i][j]);
+  }
+}</tt></pre>
+</div></div>
+<div class="paragraph"><p>So, with the basic math out of the way, we&#8217;re ready to write the filter code.  The only remaining wrinkle is that images in Processing are held in one dimensional arrays of colors, rather than 2 dimensional arrays of (x,y) coordinates, as explained in this great <a href="http://processing.org/learning/pixels/">Images and Pixels</a> tutorial by Daniel Shiffman.  In the tutorial, he gives a nice formula that you can use to map an (x,y) coordinate to the position in the image array:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>position in array = x + IMAGE_WIDTH * y</tt></pre>
+</div></div>
+<div class="paragraph"><p>The following figure should help illustrate most of the concepts at work here:</p></div>
+<div class="imageblock" id="filter-pixel-layout">
+<div class="content">
+<img src="figs/filter_pixel_layout.png" alt="figs/filter_pixel_layout.png" />
+</div>
+<div class="title">Figure 4. Mapping pixels into a one-dimensional array</div>
+</div>
+<div class="paragraph"><p>Without further ado, here&#8217;s the code to implement the filter:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>PImage pic = loadImage("/Users/odewahn/Desktop/hydrant_r.png");
+
+
+// Create filter here
+float mat[][] = {
+  {0.0, 0.0, 0.0},
+  {0.0,1.0,0.0},
+  {0.0, 0.0, 1.0}
+};
+
+//Applies the passed filter to the image and returns a new image
+PImage filter(PImage img, float[][] filter) {
+  int loc;
+  PImage retVal = createImage(img.width, img.height, RGB);
+  img.loadPixels();  //Required to read and write the pixels
+  retVal.loadPixels();  // Required to read and write pixels
+  //Process the pixels in img, apply filter, and then create a new pixel in retVal
+  for (int x = 0; x &lt; img.width; x++) {
+    for (int y = 0; y &lt; img.height; y++) {
+      loc = x + y*img.width; //Convert the (x,y) coordinate into a position in the array
+      //Pull out RGB for the left image
+      float[] pix = new float[3];  // Create a 3x1  matrix of pixels
+      pix[0] = red(img.pixels[loc]);
+      pix[1] = green(img.pixels[loc]);
+      pix[2] = blue(img.pixels[loc]);
+      //Compute new pixel color in the merged image
+      float res[] = { 0.0, 0.0, 0.0 } ;  //Define the 3x1 matrix for the output
+      //Perform the matrix multiplication
+      for (int i=0;  i &lt; filter[0].length; i++) {
+        for (int j=0; j &lt; pix.length; j++) {
+           res[j] += filter[i][j] * pix[j];
+        }
+      }
+      //Now set new color
+      retVal.pixels[loc] = color(res[0],res[1],res[2]);
+    }
+  }
+  return retVal;
+}
+
+void setup() {
+  size(pic.width, pic.height);
+}
+
+
+void draw() {
+  image(filter(pic, mat),0,0);
+}</tt></pre>
+</div></div>
+</div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2011-03-20 20:48:19 EDT
+</div>
+</div>
+</body>
+</html>
