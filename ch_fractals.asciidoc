@@ -13,21 +13,21 @@ After a few hundred iterations, you'll begin to see a ghostly outline of a fern.
 
 [[barnsley]]
 .The barnsley fern
-image::figs/frac_barnsley.png[scaledwidth="90%"]
+image:figs/frac_barnsley.png[scaledwidth="90%"]
 
 Let's unpack the details a bit more.  A transformation is a formula that...well, transforms one point into another point.  Just like the translate, rotate, and scale transformations described on page 104 of http://www.makershed.com/ProductDetails.asp?ProductCode=9781449379803&Click=37845[Getting Started with Processing], the transformations in the IFS system map a point to a new location by applying a http://en.wikipedia.org/wiki/Transformation_matrix[transformation matrix], which is a shorthand way of representing a set of formulas.
 
 The table that defines the IFS system provides the values used in the matrices.  Columns a,b,d,d,e, and f represent the various elements in a matrix. (I'll talk about column p in a second.)  The next figure shows how to translate a row in an IFS system into a matrix:
 
 [[frac-matrix]]
-.The matric for the Barnsley fern
-image::figs/frac_matrix.png[scaledwidth="90%"]
+.The matrix for the Barnsley fern
+image:figs/frac_matrix.png[scaledwidth="90%"]
 
 As an example, here's the 3rd transformation matrix for the Barnsley Fern that was shown earlier:
 
 [[frac-matrix-example]]
 .The matrix for the Barnsley fern
-image::figs/frac_matrix_example.png[scaledwidth="90%"]
+image:figs/frac_matrix_example.png[scaledwidth="90%"]
 
 
 The final column in the IFS matrix, p, represents the frequency with which the transformation is selected.  So, for the Barnsley fern, transformation f1 is selected 1% of the time, f2 is selected 85% of the time, and f3 and f4 are each selected 7% of the time.  If this is a bit confusing, think of as though you filled up a bag with 100 marbles, each labelled each with one of these functions.  You'd have 1 marble for f4, 85 for f2, 7 for f3, and 7 for f4.  At each iteration, you'd randomly grab a marble from the bag, look at it's label, apply the corresponding transformation, and then drop the marble backinto the bag.  
@@ -37,7 +37,7 @@ Now that you understand the basic idea of the IFS fractals, let's take a quick l
 
 [[frac-controlp5]]
 .controlp5 controls
-image::figs/frac_controlp5.png[scaledwidth="90%"]
+image:figs/frac_controlp5.png[scaledwidth="90%"]
 
 We're going to use the "knob" control to allow the user to set the number of iterations used to create the drawing, and the "radio" control to select which IFS system to display.  
 
@@ -45,7 +45,7 @@ Before we can use the library in our sketch, we have to get it installed.  The f
 
 [[frac-prefs]]
 .Processing preferences
-image::figs/frac_preferences.png[scaledwidth="90%"]
+image:figs/frac_preferences.png[scaledwidth="90%"]
 
 After you've located the main directory, use a tool like Window's Explorer, Mac's finder, or UNIX's trusty terminal to see if there is a subdirectory called "libraries." If so, you're all set. If not, then create the subdirectory (be sure to name it "libraries").
 
@@ -53,7 +53,7 @@ Next, you're ready to install controlP5.  Go to the http://www.sojamo.de/librari
 
 [[frac-install]]
 .Installing the controlp5 library
-image::figs/frac_library.png[scaledwidth="90%"]
+image:figs/frac_library.png[scaledwidth="90%"]
 
 After the library is installed, restart Processing.  Now we're ready to talk a little bit about what the fractal side of the project.
 
@@ -114,6 +114,6 @@ So, for the "ifsSelect()" method, we have a parameter that will tell us the inde
 
 [[frac-variable-map]]
 .Mapping variables to controls in controlp5
-image::figs/frac_variable_map.png[scaledwidth="90%"]
+image:figs/frac_variable_map.png[scaledwidth="90%"]
 
 The final piece of the puzzle is the "makeIFS() method, which makes the actual calculations required to create the fractal.  Because IFS systems are so elegant, there really isn't very much to say.  We simply loop through the number of iterations specified in the variable "N"  (whose value has been set by the "iterationKnob()" method), pull out a transform from the current IFS system (whose value has been set in the "ifsSelect()" method), and then add each point into the array of Point objects.  We also keep track of the ranges of the X and Y values so that we can scale the image to fill up the drawing area.
